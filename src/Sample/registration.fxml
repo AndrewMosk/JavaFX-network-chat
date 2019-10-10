@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?scenebuilder-stylesheet /CSS/Style.css?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox  fx:controller="Sample.ControllerVBox" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+    <VBox HBox.hgrow="ALWAYS" maxWidth="Infinity">
+        <HBox fx:id="upperPanel">
+            <TextField HBox.hgrow="ALWAYS" promptText="логин..." fx:id="loginField" />
+            <TextField HBox.hgrow="ALWAYS" promptText="ник..." fx:id="nickField" />
+            <PasswordField promptText="пароль..." fx:id="passwordField"/>
+        </HBox>
+        <Button HBox.hgrow="ALWAYS" maxWidth="Infinity" text="Зарегестрироваться" onAction="#tryToReg"/>
+    </VBox>
+</HBox>
