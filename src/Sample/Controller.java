@@ -18,7 +18,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class ControllerVBox {
+public class Controller {
     @FXML
     TextField textField;
     @FXML
@@ -67,7 +67,7 @@ public class ControllerVBox {
     }
 
     private void setNewTitle(String nick){
-        Stage stage = MainVBox.getPrimaryStage();
+        Stage stage = Main.getPrimaryStage();
 
         if(nick.isEmpty()){
             stage.setTitle("Chat");
@@ -117,6 +117,12 @@ public class ControllerVBox {
                                     setNewTitle("");
                                     vBox.getChildren().clear();
                                 });
+
+                            } else if (msg.equals("Ошибка добавления в черный список")){
+                                Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
+                            } else if (msg.startsWith("/blacklist")){
+                                String[] tokens = msg.split(" ", 3);
+                                Platform.runLater(() -> showAlertWithHeaderText(tokens[2], "Пользователь " + tokens[1]));
                             }else {
                                 Platform.runLater(() -> addText(msg));
                             }
@@ -155,7 +161,7 @@ public class ControllerVBox {
     }
 
     public void closeWindow(){
-        Stage stage = MainVBox.getPrimaryStage();
+        Stage stage = Main.getPrimaryStage();
         stage.close();
     }
 
@@ -254,7 +260,7 @@ public class ControllerVBox {
             window.getIcons().add(image);
             window.setScene(new Scene(parent, width, height));
             window.setResizable(false);
-            window.initOwner(MainVBox.getPrimaryStage());
+            window.initOwner(Main.getPrimaryStage());
             window.initModality(Modality.WINDOW_MODAL);
             window.show();
         }else {

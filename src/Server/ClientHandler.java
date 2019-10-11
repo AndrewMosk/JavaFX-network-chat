@@ -65,10 +65,21 @@ class ClientHandler {
                             if (msg.equalsIgnoreCase("/end")) {
                                 sendMessage("/clientClose");
                                 break;
-                            }else if (msg.startsWith("/w")){
+                            }else if (msg.startsWith("/w")) {
                                 //сообщение конкретному клиенту
                                 String[] tokens = msg.split(" ", 3);
                                 serv.singleMessage(tokens[2], nick, tokens[1]);
+                            }else if (msg.startsWith("/blacklist")){
+                                String[] tokens = msg.split(" ", 3);
+                                if (nick.equals(tokens[1])){
+                                    sendMessage("Ошибка добавления в черный список");
+                                }else {
+                                    if (serv.addToBlackList(nick, tokens[1])) {
+                                        sendMessage("/blacklist " + tokens[1] + " Пользователь добавлен в ченый список");
+                                    }else {
+                                        sendMessage("/blacklist " + tokens[1] + " Не найден");
+                                    }
+                                }
                             }else {
                                 serv.broadcastMessage(nick + ": " + msg);
                             }

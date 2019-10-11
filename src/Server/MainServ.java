@@ -3,6 +3,7 @@ package Server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Vector;
 
 class MainServ {
@@ -37,7 +38,15 @@ class MainServ {
     }
 
     void broadcastMessage(String msg){
+        String[] tokens = msg.split(":");
+        ArrayList<String> blacklist = AuthService.getBlacklist(tokens[0]);
         for (ClientHandler client: clients) {
+            //проверка на черный список...
+            //как лучше реализовать? конечно, лучше было бы не дергать базу по каждому нику, а сделать все сразу
+            //получить весь черный списиок по данному клиенту  и проверять включен ли ник текущего клиента в список, и если нет - отправлять!
+            //использовать коллекцию ArrayList<String> arr = new ArrayList<>(); у нее есть метод contains
+
+
             client.sendMessage(msg);
         }
     }
@@ -68,4 +77,13 @@ class MainServ {
             }
         }
     }
+
+    boolean addToBlackList(String nick, String nickToBlackList){
+        //чтобы не проверять есть ли пришедший ник уже в списке у пользователя, соотвествующим образом настроил БД - у
+        // колонки id_black установил свойство уникальности и в случае конфликта просто перезаписываю строку
+        return AuthService.addUserToBlackList(nick,nickToBlackList);
+
+
+    }
+
 }
