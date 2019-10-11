@@ -41,13 +41,9 @@ class MainServ {
         String[] tokens = msg.split(":");
         ArrayList<String> blacklist = AuthService.getBlacklist(tokens[0]);
         for (ClientHandler client: clients) {
-            //проверка на черный список...
-            //как лучше реализовать? конечно, лучше было бы не дергать базу по каждому нику, а сделать все сразу
-            //получить весь черный списиок по данному клиенту  и проверять включен ли ник текущего клиента в список, и если нет - отправлять!
-            //использовать коллекцию ArrayList<String> arr = new ArrayList<>(); у нее есть метод contains
-
-
-            client.sendMessage(msg);
+            if (!blacklist.contains(client.getNick())) {
+                client.sendMessage(msg);
+            }
         }
     }
 

@@ -81,12 +81,17 @@ class AuthService {
 
     static ArrayList<String> getBlacklist(String nick){
         ArrayList<String> blacklist = new ArrayList<>();
+        String sql = String.format("SELECT nickname FROM main  JOIN " +
+                "(SELECT id_black FROM blacklist LEFT JOIN main ON main.id = blacklist.id WHERE main.nickname = '%s') AS blacklst on main.id=blacklst.id_black", nick);
+        try {
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()){
+                blacklist.add(rs.getString("nickname"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
 
-//        SELECT nickname FROM main
-//        JOIN blacklst on main.id=blacklst.id_black
-//
-//                (SELECT id_black FROM blacklist
-//                        LEFT JOIN main ON main.id = blacklist.id WHERE main.nickname = 'nick1') AS blacklst
 
         return blacklist;
     }
