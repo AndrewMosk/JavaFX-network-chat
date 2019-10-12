@@ -39,9 +39,13 @@ class MainServ {
 
     void broadcastMessage(String msg){
         String[] tokens = msg.split(":");
+        //черный список того, кто отправялет
         ArrayList<String> blacklist = AuthService.getBlacklist(tokens[0]);
+        //проверяю есть ли отправитель в чьем-нибудт черном списке
+        ArrayList<String> InverseBlacklist = AuthService.getInverseBlacklist(tokens[0]);
+
         for (ClientHandler client: clients) {
-            if (!blacklist.contains(client.getNick())) {
+            if (!blacklist.contains(client.getNick()) & !InverseBlacklist.contains(client.getNick())) {
                 client.sendMessage(msg);
             }
         }

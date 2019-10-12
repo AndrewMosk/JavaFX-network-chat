@@ -92,8 +92,23 @@ class AuthService {
             e.printStackTrace();
         }
 
-
         return blacklist;
+    }
+
+    static ArrayList<String> getInverseBlacklist(String nick){
+        ArrayList<String> InverseBlacklist = new ArrayList<>();
+        String sql = String.format("SELECT nickname FROM main  JOIN " +
+                "(SELECT blacklist.id FROM blacklist LEFT JOIN main ON main.id = blacklist.id_black WHERE main.nickname = '%s') AS blacklst on main.id=blacklst.id", nick);
+        try {
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()){
+                InverseBlacklist.add(rs.getString("nickname"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return InverseBlacklist;
     }
 
     static void disconnect(){

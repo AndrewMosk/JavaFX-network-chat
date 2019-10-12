@@ -86,30 +86,29 @@ public class Controller {
             Task<Void> task = new Task<Void>() {
                 @Override protected Void call() {
                     try {
-                        while (true){
+                        while (true) {
                             String str = in.readUTF();
-                            if (str.startsWith("/authOk")){
+                            if (str.startsWith("/authOk")) {
                                 String[] tokens = str.split(" ");
                                 setAuthorized(true);
                                 Platform.runLater(() -> setNewTitle(tokens[1]));
                                 break;
-                            }else if (str.equals("Ошибка аутентификаци")){
+                            } else if (str.equals("Ошибка аутентификаци")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Неверно введена пара логин/пароль"));
-                            }else if (str.equals("Попытка повторного входа")){
+                            } else if (str.equals("Попытка повторного входа")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Клиент с такими учетными данными уже воплнил вход"));
-                            }else if (str.equals("Регистрация прошла успешно")){
+                            } else if (str.equals("Регистрация прошла успешно")) {
                                 Platform.runLater(() -> {
                                     showAlertWithHeaderText(str, "Вы можете осуществить вход по только что введенным учетным данным");
                                     regStage.close(); //не работает :-((
                                 });
-                            }else if (str.equals("Регистрация закончилась неудачей")){
+                            } else if (str.equals("Регистрация закончилась неудачей")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Возможно возникла техническая проблема, попробуйте пройти регистрацию еще раз"));
-                            }else if (str.equals("Регистрация отклонена")){
+                            } else if (str.equals("Регистрация отклонена")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Такой логин или ник уже зарегестрированы"));
                             }
                         }
-                        while (true){
-
+                        while (true) {
                             String msg = in.readUTF();
                             if (msg.equalsIgnoreCase("/clientClose")) {
                                 setAuthorized(false);
@@ -118,12 +117,12 @@ public class Controller {
                                     vBox.getChildren().clear();
                                 });
 
-                            } else if (msg.equals("Ошибка добавления в черный список")){
+                            } else if (msg.equals("Ошибка добавления в черный список")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
-                            } else if (msg.startsWith("/blacklist")){
+                            } else if (msg.startsWith("/blacklist")) {
                                 String[] tokens = msg.split(" ", 3);
                                 Platform.runLater(() -> showAlertWithHeaderText(tokens[2], "Пользователь " + tokens[1]));
-                            }else {
+                            } else {
                                 Platform.runLater(() -> addText(msg));
                             }
                         }
