@@ -79,11 +79,7 @@ class MainServ {
     }
 
     boolean addToBlackList(String nick, String nickToBlackList){
-        //чтобы не проверять есть ли пришедший ник уже в списке у пользователя, соотвествующим образом настроил БД - у
-        // колонки id_black установил свойство уникальности и в случае конфликта просто перезаписываю строку
         return AuthService.addUserToBlackList(nick,nickToBlackList);
-
-
     }
 
 }
