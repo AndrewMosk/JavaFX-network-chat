@@ -47,6 +47,8 @@ public class Controller {
     TextField nickField;
     @FXML
     VBox VBoxUpperPanel;
+    @FXML
+    Button registrationButton;
 
     private Stage regStage = new Stage();
     private Stage infoStage = new Stage();
@@ -100,7 +102,9 @@ public class Controller {
                             } else if (str.equals("Регистрация прошла успешно")) {
                                 Platform.runLater(() -> {
                                     showAlertWithHeaderText(str, "Вы можете осуществить вход по только что введенным учетным данным");
-                                    regStage.close(); //не работает :-((
+                                    //закрываю окно регистрации
+                                    Stage stage = (Stage) registrationButton.getScene().getWindow();
+                                    stage.close();
                                 });
                             } else if (str.equals("Регистрация закончилась неудачей")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Возможно возникла техническая проблема, попробуйте пройти регистрацию еще раз"));
