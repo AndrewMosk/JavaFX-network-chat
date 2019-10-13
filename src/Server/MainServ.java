@@ -3,6 +3,7 @@ package Server;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.Vector;
 
 class MainServ {
@@ -37,8 +38,16 @@ class MainServ {
     }
 
     void broadcastMessage(String msg){
+        String[] tokens = msg.split(":");
+        //черный список того, кто отправялет
+        ArrayList<String> blacklist = AuthService.getBlacklist(tokens[0]);
+        //проверяю есть ли отправитель в чьем-нибудт черном списке
+        ArrayList<String> InverseBlacklist = AuthService.getInverseBlacklist(tokens[0]);
+
         for (ClientHandler client: clients) {
-            client.sendMessage(msg);
+            if (!blacklist.contains(client.getNick()) & !InverseBlacklist.contains(client.getNick())) {
+                client.sendMessage(msg);
+            }
         }
     }
 
@@ -68,4 +77,9 @@ class MainServ {
             }
         }
     }
+
+    boolean addToBlackList(String nick, String nickToBlackList){
+        return AuthService.addUserToBlackList(nick,nickToBlackList);
+    }
+
 }

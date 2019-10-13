@@ -14,7 +14,7 @@
 <?import javafx.geometry.Insets?>
 
 <?import javafx.scene.control.PasswordField?>
-<BorderPane fx:id="pane" fx:controller="Sample.ControllerVBox" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121">
+<BorderPane fx:id="pane" fx:controller="Sample.Controller" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8.0.121">
     <stylesheets><URL value="@/CSS/Style.css" /></stylesheets>
     <top>
         <VBox>
