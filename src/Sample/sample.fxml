@@ -25,6 +25,9 @@
                 <Menu mnemonicParsing="false" text="Edit">
                     <MenuItem mnemonicParsing="false" text="Clear window" fx:id="clear" onAction="#clearWindow" />
                 </Menu>
+                <Menu mnemonicParsing="false" text="Settings">
+                    <MenuItem mnemonicParsing="false" text="Network configuration" fx:id="netConfig" onAction="#openConfigWindow" />
+                </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                     <MenuItem mnemonicParsing="false" text="About" fx:id="about" onAction="#openInfoWindow" />
                 </Menu>

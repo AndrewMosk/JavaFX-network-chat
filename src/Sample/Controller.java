@@ -3,12 +3,15 @@ package Sample;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
@@ -33,8 +36,6 @@ public class Controller {
     private Socket socket;
     private DataInputStream in;
     private DataOutputStream out;
-    private final String IP_ADDRESS = "localhost";
-    private final int PORT = 8189;
     private boolean isAuthorized;
 
     @FXML
@@ -52,6 +53,7 @@ public class Controller {
 
     private Stage regStage = new Stage();
     private Stage infoStage = new Stage();
+    private Stage configStage = new Stage();
 
     private void setAuthorized(boolean isAuthorized){
         this.isAuthorized = isAuthorized;
@@ -81,7 +83,8 @@ public class Controller {
 
     private void connect() {
         try {
-            socket = new Socket(IP_ADDRESS,PORT);
+            String[] configData = getConfigData();
+            socket = new Socket(configData[0], Integer.parseInt(configData[1]));
             in = new DataInputStream(socket.getInputStream());
             out = new DataOutputStream(socket.getOutputStream());
 
@@ -240,7 +243,7 @@ public class Controller {
 
     public void openRegistrationWindow(ActionEvent actionEvent){
         try {
-            openWindow(regStage, "registration.fxml", "reg.jpg","Регистрация нового пользователя",350,40);
+            openWindow(regStage, "registration.fxml", "reg.jpg","Регистрация нового пользователя",350,40,"","");
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -248,13 +251,78 @@ public class Controller {
 
     public void openInfoWindow(){
         try {
-            openWindow(infoStage,"sample_info.fxml","info.jpg","Info",350,100);
+            openWindow(infoStage,"sample_info.fxml","info.jpg","Info",350,100, "","");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    private void openWindow(Stage window, String fxmlFile, String iconFile, String title, int width, int height) throws IOException {
+    public void openConfigWindow(){
+        String[] configData = getConfigData();
+        createConfigWindow(configData[0],configData[1]);
+    }
+
+    private String[] getConfigData(){
+        if (Config.getConnection()==null){
+            Config.connect();
+        }
+        return Config.getConfigData();
+    }
+
+    private void createConfigWindow(String s, String p) {
+        Stage config = new Stage();
+        config.setTitle("Network configuration");
+        config.getIcons().add(new Image("file:images/network.jpg"));
+        config.initModality(Modality.WINDOW_MODAL);
+        config.initOwner(Main.getPrimaryStage());
+
+        Label labelServer = new Label("Сервер");
+        labelServer.setMinSize(150,20);
+        Label labelPort = new Label("Порт");
+        labelPort.setMinSize(150,20);
+
+        TextField serv = new TextField(s);
+        serv.setMinSize(150,20);
+        TextField port = new TextField(p);
+        port.setMinSize(150,20);
+
+        Button buttonOk = new Button ("OK");
+        buttonOk.setMinSize(150,20);
+        Button buttonCancel = new Button ("Отмена");
+        buttonCancel.setMinSize(150,20);
+
+        buttonOk.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                Config.setConfigData(serv.getText(),Integer.parseInt(port.getText()));
+                configStage.close();
+            }
+        });
+        buttonCancel.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent event) {
+                configStage.close();
+            }
+        });
+
+        VBox vBoxMain = new VBox();
+        HBox hBoxLabel = new HBox();
+        HBox hBoxText = new HBox();
+        HBox hBoxButtons = new HBox();
+        hBoxLabel.getChildren().addAll(labelServer,labelPort);
+        hBoxText.getChildren().addAll(serv,port);
+        hBoxButtons.getChildren().addAll(buttonOk,buttonCancel);
+        vBoxMain.getChildren().addAll(hBoxLabel,hBoxText,hBoxButtons);
+
+        vBoxMain.setPadding(new Insets(10, 10, 10, 10));
+        vBoxMain.setSpacing(7);
+        Scene configScene = new Scene(vBoxMain, 320,110);
+        config.setScene(configScene);
+        configStage = config;
+        config.show();
+    }
+    
+    private void openWindow(Stage window, String fxmlFile, String iconFile, String title, int width, int height, String serv, String p) throws IOException {
         if (window.getScene()==null) {
             Image image = new Image("file:images/" + iconFile);
 
@@ -265,9 +333,7 @@ public class Controller {
             window.setResizable(false);
             window.initOwner(Main.getPrimaryStage());
             window.initModality(Modality.WINDOW_MODAL);
-            window.show();
-        }else {
-            window.show();
         }
+        window.show();
     }
 }
