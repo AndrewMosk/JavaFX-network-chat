@@ -2,7 +2,6 @@
 
 <?scenebuilder-stylesheet /CSS/Style.css?>
 <?import java.net.*?>
-<?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
@@ -36,18 +35,25 @@
         </VBox>
     </VBox>
 
-    <VBox VBox.vgrow="ALWAYS" fx:id="vBoxMain">
-        <ListView VBox.vgrow="ALWAYS" fx:id="listView">
-            <SplitPane fx:id="pane">
-                <VBox fx:id="vBox1">
+    <SplitPane VBox.vgrow="ALWAYS" fx:id="middlePane" dividerPositions="0.3">
+        <ListView fx:id="clientsList" onMouseClicked="#selectClient" AnchorPane.rightAnchor="500.0" managed="false" visible="false">
 
-                </VBox>
-            </SplitPane>
         </ListView>
-    </VBox>
+        <VBox>
+            <VBox  fx:id="vBoxMain" VBox.vgrow="ALWAYS">
+                <ListView VBox.vgrow="ALWAYS" fx:id="listView">
+                    <SplitPane fx:id="pane">
+                        <VBox fx:id="vBox1">
 
-    <HBox fx:id="bottomPanel" managed="false" visible="false" AnchorPane.bottomAnchor="0.0">
-        <TextField fx:id="textField" alignment="BASELINE_LEFT" onAction="#sendMsg" promptText="Введите сообщение ..." HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btn1" alignment="BOTTOM_RIGHT" contentDisplay="GRAPHIC_ONLY" onAction="#sendMsg" prefHeight="25.0" prefWidth="30.0" text="Send"/>
-    </HBox>
+                        </VBox>
+                    </SplitPane>
+                </ListView>
+            </VBox>
+
+            <HBox fx:id="bottomPanel" managed="false" visible="false" AnchorPane.bottomAnchor="0.0">
+                <TextField fx:id="textField" alignment="BASELINE_LEFT" onAction="#sendMsg" promptText="Введите сообщение ..." HBox.hgrow="ALWAYS"/>
+                <Button fx:id="btn1" alignment="BOTTOM_RIGHT" contentDisplay="GRAPHIC_ONLY" onAction="#sendMsg" prefHeight="25.0" prefWidth="30.0" text="Send"/>
+            </HBox>
+        </VBox>
+    </SplitPane>
 </VBox>

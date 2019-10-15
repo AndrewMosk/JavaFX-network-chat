@@ -45,6 +45,8 @@ public class Controller {
     VBox vBoxMain;
     @FXML
     SplitPane pane;
+    @FXML
+    ListView clientsList;
 
     private Socket socket;
     private DataInputStream in;
@@ -77,11 +79,15 @@ public class Controller {
             VBoxUpperPanel.setManaged(true);
             bottomPanel.setVisible(false);
             bottomPanel.setManaged(false);
+            clientsList.setVisible(false);
+            clientsList.setManaged(false);
         }else {
             VBoxUpperPanel.setVisible(false);
             VBoxUpperPanel.setManaged(false);
             bottomPanel.setVisible(true);
             bottomPanel.setManaged(true);
+            clientsList.setVisible(true);
+            clientsList.setManaged(true);
         }
     }
 
@@ -368,5 +374,9 @@ public class Controller {
             window.initModality(Modality.WINDOW_MODAL);
         }
         window.show();
+    }
+
+    public void selectClient(MouseEvent mouseEvent) {
+
     }
 }

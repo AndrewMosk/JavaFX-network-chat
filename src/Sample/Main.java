@@ -25,8 +25,8 @@ public class Main extends Application {
 
         Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
         primaryStage.setTitle("Chat");
-        primaryStage.setResizable(false);
-        primaryStage.setScene(new Scene(root, 350, 600));
+        //primaryStage.setResizable(false);
+        primaryStage.setScene(new Scene(root, 600, 800));
         primaryStage.show();
     }
     public static void main(String[] args) {
