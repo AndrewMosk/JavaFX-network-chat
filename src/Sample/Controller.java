@@ -61,8 +61,6 @@ public class Controller {
     private Stage configStage = new Stage();
 
     String nickname = "";
-    @FXML
-    ScrollPane pane;
 
 
     private void setAuthorized(boolean isAuthorized){
@@ -184,24 +182,49 @@ public class Controller {
 
 
         //ну вроде как с splitPane получилось более-менее... нужно подумать - как ее допилить... может вообще скролпэйн убрать и заменить на сплит?
+        //два вбокса в параллель! в вбокс - шбокс, в него - два вбокса! в каждом из них разнесение по разным сторонам!
+
+//        VBox vb = new VBox();
+//        vb.getChildren().add(new TextMessage(msg));
+//
+//        SplitPane splitPane = new SplitPane();
+//
+//        StackPane child1 = new StackPane();
+//        StackPane child2 = new StackPane();
+//
+//        String[] tokens = msg.split(":",2);
+//
+//        if (tokens[0].equals(nickname)) {
+//            child1.getChildren().add(vb);
+//        }else {
+//            child2.getChildren().add(vb);
+//        }
+//
+//        splitPane.getItems().addAll(child1, child2);
+//        vBox1.getChildren().add(splitPane);
+
+
         VBox vb = new VBox();
-        vb.getChildren().add(new TextMessage(msg));
+        //vb.getChildren().add(new TextMessage(msg));
 
-        SplitPane splitPane = new SplitPane();
-
-        StackPane child1 = new StackPane();
-        StackPane child2 = new StackPane();
+        HBox hb = new HBox();
+        VBox vb1 = new VBox();
+        VBox vb2 = new VBox();
 
         String[] tokens = msg.split(":",2);
 
         if (tokens[0].equals(nickname)) {
-            child1.getChildren().add(vb);
+            vb1.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         }else {
-            child2.getChildren().add(vb);
+            vb2.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
         }
 
-        splitPane.getItems().addAll(child1, child2);
-        vBox1.getChildren().add(splitPane);
+        hb.getChildren().addAll(vb1, vb2);
+        vb.getChildren().add(hb);
+
+        vBox1.getChildren().add(vb);
 
     }
 
