@@ -37,18 +37,29 @@ class MainServ {
         AuthService.disconnect();
     }
 
-    void broadcastMessage(String msg){
-        String[] tokens = msg.split(":");
+    void sendMessage(String msg){
+        String[] msfTokens = msg.split(":", 3);
+        String nickSender = msfTokens[0];
+        String nickReceiver = msfTokens[1];
+        String message = msfTokens[2];
+
+        //String[] tokens = msg.split(":");
         //черный список того, кто отправялет
-        ArrayList<String> blacklist = AuthService.getBlacklist(tokens[0]);
+        ArrayList<String> blacklist = AuthService.getBlacklist(nickSender);
         //проверяю есть ли отправитель в чьем-нибудт черном списке
-        ArrayList<String> InverseBlacklist = AuthService.getInverseBlacklist(tokens[0]);
+        ArrayList<String> InverseBlacklist = AuthService.getInverseBlacklist(nickSender);
 
         for (ClientHandler client: clients) {
-            if (!blacklist.contains(client.getNick()) & !InverseBlacklist.contains(client.getNick())) {
-                client.sendMessage(msg);
+            if (client.getNick().equals(nickReceiver)) {
+                if (!blacklist.contains(client.getNick()) & !InverseBlacklist.contains(client.getNick())) {
+                    client.sendMessage(nickSender + ": " + message);
+                }
+            }
+            if (client.getNick().equals(nickSender)) {
+                client.sendMessage(nickSender + ": " + message);
             }
         }
+
     }
 
     boolean checkNick(String nick){

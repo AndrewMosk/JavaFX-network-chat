@@ -81,7 +81,8 @@ class ClientHandler {
                                     }
                                 }
                             }else {
-                                serv.broadcastMessage(nick + ": " + msg);
+                                System.out.println(nick + ": " + msg);
+                                serv.sendMessage(nick + ":" + msg);
                             }
                         }
                     }catch (IOException | SQLException e){

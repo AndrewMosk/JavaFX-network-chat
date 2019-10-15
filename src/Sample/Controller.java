@@ -25,6 +25,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Controller {
     @FXML
@@ -35,16 +37,14 @@ public class Controller {
     MenuItem clear;
     @FXML
     MenuItem about;
+    //@FXML
+    private VBox vBoxChat = new VBox();
+    private Map<String, VBox> vBoxCollection = new HashMap<>();
     @FXML
-    VBox vBox1;
-    @FXML
-    VBox vBox2;
+    SplitPane splitPane;
+
     @FXML
     ListView listView;
-    @FXML
-    VBox vBoxMain;
-    @FXML
-    SplitPane pane;
     @FXML
     ListView clientsList;
 
@@ -70,7 +70,7 @@ public class Controller {
     private Stage infoStage = new Stage();
     private Stage configStage = new Stage();
 
-    String nickname = "";
+    private String nickname = "";
 
     private void setAuthorized(boolean isAuthorized){
         this.isAuthorized = isAuthorized;
@@ -81,6 +81,7 @@ public class Controller {
             bottomPanel.setManaged(false);
             clientsList.setVisible(false);
             clientsList.setManaged(false);
+            splitPane.getItems().removeAll();
         }else {
             VBoxUpperPanel.setVisible(false);
             VBoxUpperPanel.setManaged(false);
@@ -88,6 +89,7 @@ public class Controller {
             bottomPanel.setManaged(true);
             clientsList.setVisible(true);
             clientsList.setManaged(true);
+            splitPane.getItems().add(vBoxChat);
         }
     }
 
@@ -118,8 +120,11 @@ public class Controller {
                             String str = in.readUTF();
                             if (str.startsWith("/authOk")) {
                                 String[] tokens = str.split(" ");
-                                setAuthorized(true);
-                                Platform.runLater(() -> setNewTitle(tokens[1]));
+                                //setAuthorized(true);
+                                Platform.runLater(() -> {
+                                    setNewTitle(tokens[1]);
+                                    setAuthorized(true);
+                                });
                                 break;
                             } else if (str.equals("Ошибка аутентификаци")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Неверно введена пара логин/пароль"));
@@ -144,14 +149,16 @@ public class Controller {
                                 setAuthorized(false);
                                 Platform.runLater(() -> {
                                     setNewTitle("");
-                                    vBox1.getChildren().clear();
+                                    vBoxChat.getChildren().clear();
                                 });
                             }else if (msg.startsWith("/clientslist")){
                                 String[] tokens = msg.split(" ");
                                 Platform.runLater(() -> {
                                     clientsList.getItems().clear();
                                     for (int i = 1; i < tokens.length; i++) {
-                                        clientsList.getItems().add(tokens[i]);
+                                        if (!tokens[i].equals(nickname)) {
+                                            clientsList.getItems().add(tokens[i]);
+                                        }
                                     }
                                 });
                             } else if (msg.equals("Ошибка добавления в черный список")) {
@@ -205,12 +212,12 @@ public class Controller {
         hb.getChildren().addAll(vb1, vb2);
         vb.getChildren().add(hb);
 
-        vBox1.getChildren().addAll(vb);
+        vBoxChat.getChildren().addAll(vb);
         listView.scrollTo(listView.getItems().size());
     }
 
     public void clearWindow(){
-        vBox1.getChildren().clear();
+        vBoxChat.getChildren().clear();
     }
 
     public void closeWindow(){
@@ -221,10 +228,12 @@ public class Controller {
     public void sendMsg(){
         if (!textField.getText().isEmpty()) {
             try {
-                vBox1.setSpacing(10);
-                out.writeUTF(textField.getText());
-                textField.clear();
-                textField.requestFocus();
+                if (clientsList.getSelectionModel().getSelectedItem() != null) {
+                    vBoxChat.setSpacing(10);
+                    out.writeUTF(clientsList.getSelectionModel().getSelectedItem().toString() + ":" +textField.getText());
+                    textField.clear();
+                    textField.requestFocus();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -384,6 +393,17 @@ public class Controller {
     }
 
     public void selectClient(MouseEvent mouseEvent) {
+        setVBox(clientsList.getSelectionModel().getSelectedItem().toString());
+    }
+
+    private void setVBox(String nick) {
+        if (vBoxCollection.containsKey(nick)) {
+            vBoxChat = vBoxCollection.get(nick);
+        }else {
+            vBoxChat = new VBox();
+        }
+        splitPane.getItems().removeAll();
+        splitPane.getItems().add(vBoxChat);
 
     }
 }

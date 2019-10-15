@@ -35,17 +35,17 @@
         </VBox>
     </VBox>
 
-    <SplitPane VBox.vgrow="ALWAYS" fx:id="middlePane" dividerPositions="0.3">
+    <SplitPane VBox.vgrow="ALWAYS" dividerPositions="0.3">
         <ListView fx:id="clientsList" onMouseClicked="#selectClient" AnchorPane.rightAnchor="500.0" managed="false" visible="false">
 
         </ListView>
         <VBox>
-            <VBox  fx:id="vBoxMain" VBox.vgrow="ALWAYS">
+            <VBox VBox.vgrow="ALWAYS">
                 <ListView VBox.vgrow="ALWAYS" fx:id="listView">
-                    <SplitPane fx:id="pane">
-                        <VBox fx:id="vBox1">
+                    <SplitPane fx:id="splitPane">
+<!--                        <VBox fx:id="vBoxChat">-->
 
-                        </VBox>
+<!--                        </VBox>-->
                     </SplitPane>
                 </ListView>
             </VBox>
