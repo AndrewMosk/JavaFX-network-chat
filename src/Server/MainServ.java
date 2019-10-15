@@ -64,10 +64,23 @@ class MainServ {
 
     void subscribe(ClientHandler client){
         clients.add(client);
+        broadcastClientsList();
     }
 
     void unsubscribe(ClientHandler client){
         clients.remove(client);
+        broadcastClientsList();
+    }
+    void broadcastClientsList() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("/clientslist ");
+        for (ClientHandler client : clients) {
+            sb.append(client.getNick() + " ");
+        }
+        String out = sb.toString();
+        for (ClientHandler client : clients) {
+            client.sendMessage(out);
+        }
     }
 
     void singleMessage(String msg, String sourceNick, String recipientNick) {

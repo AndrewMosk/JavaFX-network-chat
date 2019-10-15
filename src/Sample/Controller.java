@@ -146,7 +146,14 @@ public class Controller {
                                     setNewTitle("");
                                     vBox1.getChildren().clear();
                                 });
-
+                            }else if (msg.startsWith("/clientslist")){
+                                String[] tokens = msg.split(" ");
+                                Platform.runLater(() -> {
+                                    clientsList.getItems().clear();
+                                    for (int i = 1; i < tokens.length; i++) {
+                                        clientsList.getItems().add(tokens[i]);
+                                    }
+                                });
                             } else if (msg.equals("Ошибка добавления в черный список")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
                             } else if (msg.startsWith("/blacklist")) {
