@@ -1,14 +1,11 @@
-#btn1{
-    -fx-background-image: url("file:images/send.jpg");
-}
-#label4{
-    -fx-font-weight: bold;
-}
+#btn1{-fx-background-image: url("file:images/send.jpg");}
+#label4{-fx-font-weight: bold;}
 
 .root {
     -fx-background-image: url("file:images/textArea_background.jpg");
     -fx-background-size: 100% 100%;
 }
+
 .text-area {
     -fx-background-color: #aadee0;
     -fx-background-radius: 15 15 15 0;
@@ -16,21 +13,14 @@
     -fx-font-size: 14;
 }
 
-.scroll-pane {
-    -fx-background-color: transparent;
-}
-.scroll-pane .viewport{
-    -fx-background-color: transparent;
-}
-.scroll-pane .content{
-    -fx-background-color: transparent;
-}
+.split-pane {-fx-background-color: transparent;}
+.split-pane .viewport{-fx-background-color: transparent;}
+.split-pane .content{-fx-background-color: transparent;}
+
+.list-view .list-cell:even {-fx-background-color: transparent;}
+.list-view .list-cell:odd {-fx-background-color: transparent;}
+.list-view {-fx-background-color: transparent;}
+
 .text-field {
     //-fx-background-color: white;
-}
-.text-field .viewport{
-
-}
-.text-field .content{
-
 }

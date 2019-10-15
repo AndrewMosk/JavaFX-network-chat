@@ -7,12 +7,17 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
+import javafx.geometry.NodeOrientation;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -31,7 +36,15 @@ public class Controller {
     @FXML
     MenuItem about;
     @FXML
-    VBox vBox;
+    VBox vBox1;
+    @FXML
+    VBox vBox2;
+    @FXML
+    ListView listView;
+    @FXML
+    VBox vBoxMain;
+    @FXML
+    SplitPane pane;
 
     private Socket socket;
     private DataInputStream in;
@@ -55,6 +68,8 @@ public class Controller {
     private Stage infoStage = new Stage();
     private Stage configStage = new Stage();
 
+    String nickname = "";
+
     private void setAuthorized(boolean isAuthorized){
         this.isAuthorized = isAuthorized;
         if (!isAuthorized){
@@ -75,8 +90,10 @@ public class Controller {
 
         if(nick.isEmpty()){
             stage.setTitle("Chat");
+            nickname = "";
         }else {
             String newTitle = stage.getTitle() + " " + nick;
+            nickname = nick;
             stage.setTitle(newTitle);
         }
     }
@@ -121,7 +138,7 @@ public class Controller {
                                 setAuthorized(false);
                                 Platform.runLater(() -> {
                                     setNewTitle("");
-                                    vBox.getChildren().clear();
+                                    vBox1.getChildren().clear();
                                 });
 
                             } else if (msg.equals("Ошибка добавления в черный список")) {
@@ -157,13 +174,30 @@ public class Controller {
     }
 
     private void addText(String msg){
-        vBox.setFillWidth(false);
-        vBox.setSpacing(10);
-        vBox.getChildren().add(new TextMessage(msg));
+        VBox vb = new VBox();
+        HBox hb = new HBox();
+        VBox vb1 = new VBox();
+        VBox vb2 = new VBox();
+
+        String[] tokens = msg.split(":",2);
+
+        if (tokens[0].equals(nickname)) {
+            vb1.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
+        }else {
+            vb2.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        }
+
+        hb.getChildren().addAll(vb1, vb2);
+        vb.getChildren().add(hb);
+
+        vBox1.getChildren().addAll(vb);
+        listView.scrollTo(listView.getItems().size());
     }
 
     public void clearWindow(){
-        vBox.getChildren().clear();
+        vBox1.getChildren().clear();
     }
 
     public void closeWindow(){
@@ -174,8 +208,7 @@ public class Controller {
     public void sendMsg(){
         if (!textField.getText().isEmpty()) {
             try {
-                vBox.setFillWidth(false);
-                vBox.setSpacing(10);
+                vBox1.setSpacing(10);
                 out.writeUTF(textField.getText());
                 textField.clear();
                 textField.requestFocus();
