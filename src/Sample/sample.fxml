@@ -36,15 +36,14 @@
         </VBox>
     </VBox>
 
-    <VBox VBox.vgrow="ALWAYS">
-        <SplitPane>
-<!--            <VBox fx:id="vBox1" /> есть скролл пэйн, на ней вбокс, ему я и меняю ориентацию... получается, что все, что внутри тоже ее меняет
-как этого избежать? добавить внутрь еще что-нибудь? как это тогда получится? может впаять структуру, разделенную на две части, типа право/лево?-->
+    <VBox VBox.vgrow="ALWAYS" fx:id="vBoxMain">
+        <ListView VBox.vgrow="ALWAYS" fx:id="listView">
+            <SplitPane fx:id="pane">
+                <VBox fx:id="vBox1">
 
-            <VBox fx:id="vBox1">
-
-            </VBox>
-        </SplitPane>
+                </VBox>
+            </SplitPane>
+        </ListView>
     </VBox>
 
     <HBox fx:id="bottomPanel" managed="false" visible="false" AnchorPane.bottomAnchor="0.0">

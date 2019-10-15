@@ -8,10 +8,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
@@ -37,6 +39,12 @@ public class Controller {
     VBox vBox1;
     @FXML
     VBox vBox2;
+    @FXML
+    ListView listView;
+    @FXML
+    VBox vBoxMain;
+    @FXML
+    SplitPane pane;
 
     private Socket socket;
     private DataInputStream in;
@@ -61,7 +69,6 @@ public class Controller {
     private Stage configStage = new Stage();
 
     String nickname = "";
-
 
     private void setAuthorized(boolean isAuthorized){
         this.isAuthorized = isAuthorized;
@@ -167,46 +174,7 @@ public class Controller {
     }
 
     private void addText(String msg){
-//        vBox1.setFillWidth(false);
-//        vBox1.setSpacing(10);
-//        VBox vb = new VBox();
-//        vb.getChildren().add(new TextMessage(msg));
-//        String[] tokens = msg.split(":",2);
-//
-//        if (tokens[0].equals(nickname)) {
-//            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
-//        }else {
-//            vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
-//        }
-//        vBox1.getChildren().add(vb);
-
-
-        //ну вроде как с splitPane получилось более-менее... нужно подумать - как ее допилить... может вообще скролпэйн убрать и заменить на сплит?
-        //два вбокса в параллель! в вбокс - шбокс, в него - два вбокса! в каждом из них разнесение по разным сторонам!
-
-//        VBox vb = new VBox();
-//        vb.getChildren().add(new TextMessage(msg));
-//
-//        SplitPane splitPane = new SplitPane();
-//
-//        StackPane child1 = new StackPane();
-//        StackPane child2 = new StackPane();
-//
-//        String[] tokens = msg.split(":",2);
-//
-//        if (tokens[0].equals(nickname)) {
-//            child1.getChildren().add(vb);
-//        }else {
-//            child2.getChildren().add(vb);
-//        }
-//
-//        splitPane.getItems().addAll(child1, child2);
-//        vBox1.getChildren().add(splitPane);
-
-
         VBox vb = new VBox();
-        //vb.getChildren().add(new TextMessage(msg));
-
         HBox hb = new HBox();
         VBox vb1 = new VBox();
         VBox vb2 = new VBox();
@@ -224,8 +192,8 @@ public class Controller {
         hb.getChildren().addAll(vb1, vb2);
         vb.getChildren().add(hb);
 
-        vBox1.getChildren().add(vb);
-
+        vBox1.getChildren().addAll(vb);
+        listView.scrollTo(listView.getItems().size());
     }
 
     public void clearWindow(){
@@ -240,8 +208,7 @@ public class Controller {
     public void sendMsg(){
         if (!textField.getText().isEmpty()) {
             try {
-//                vBox1.setFillWidth(false);
-//                vBox1.setSpacing(10);
+                vBox1.setSpacing(10);
                 out.writeUTF(textField.getText());
                 textField.clear();
                 textField.requestFocus();
