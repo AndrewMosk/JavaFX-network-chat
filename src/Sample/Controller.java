@@ -8,16 +8,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -25,6 +21,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Controller {
     @FXML
@@ -35,16 +33,16 @@ public class Controller {
     MenuItem clear;
     @FXML
     MenuItem about;
+    //@FXML
+    private VBox vBoxChat = new VBox();
+    private Map<String, VBox> vBoxCollection = new HashMap<>();
     @FXML
-    VBox vBox1;
-    @FXML
-    VBox vBox2;
+    SplitPane splitPane;
+
     @FXML
     ListView listView;
     @FXML
-    VBox vBoxMain;
-    @FXML
-    SplitPane pane;
+    ListView clientsList;
 
     private Socket socket;
     private DataInputStream in;
@@ -68,7 +66,7 @@ public class Controller {
     private Stage infoStage = new Stage();
     private Stage configStage = new Stage();
 
-    String nickname = "";
+    private String nickname = "";
 
     private void setAuthorized(boolean isAuthorized){
         this.isAuthorized = isAuthorized;
@@ -77,11 +75,17 @@ public class Controller {
             VBoxUpperPanel.setManaged(true);
             bottomPanel.setVisible(false);
             bottomPanel.setManaged(false);
+            clientsList.setVisible(false);
+            clientsList.setManaged(false);
+            //а здесь нужна очистка? пожалуй - да
+            splitPane.getItems().clear();
         }else {
             VBoxUpperPanel.setVisible(false);
             VBoxUpperPanel.setManaged(false);
             bottomPanel.setVisible(true);
             bottomPanel.setManaged(true);
+            clientsList.setVisible(true);
+            clientsList.setManaged(true);
         }
     }
 
@@ -112,8 +116,11 @@ public class Controller {
                             String str = in.readUTF();
                             if (str.startsWith("/authOk")) {
                                 String[] tokens = str.split(" ");
-                                setAuthorized(true);
-                                Platform.runLater(() -> setNewTitle(tokens[1]));
+                                //setAuthorized(true);
+                                Platform.runLater(() -> {
+                                    setNewTitle(tokens[1]);
+                                    setAuthorized(true);
+                                });
                                 break;
                             } else if (str.equals("Ошибка аутентификаци")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(str, "Неверно введена пара логин/пароль"));
@@ -138,9 +145,18 @@ public class Controller {
                                 setAuthorized(false);
                                 Platform.runLater(() -> {
                                     setNewTitle("");
-                                    vBox1.getChildren().clear();
+                                    vBoxChat.getChildren().clear();//ПЕРЕДЕЛАТЬ ---> ОТПРАВЛЯТЬ В ПРОЦЕДУРУ ОЧИСТКИ ВБОКСА ВМЕСТЕ С АПДЕЙТОМ КОЛЛЕКЦИИ!
                                 });
-
+                            }else if (msg.startsWith("/clientslist")){
+                                String[] tokens = msg.split(" ");
+                                Platform.runLater(() -> {
+                                    clientsList.getItems().clear();
+                                    for (int i = 1; i < tokens.length; i++) {
+                                        if (!tokens[i].equals(nickname)) {
+                                            clientsList.getItems().add(tokens[i]);
+                                        }
+                                    }
+                                });
                             } else if (msg.equals("Ошибка добавления в черный список")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
                             } else if (msg.startsWith("/blacklist")) {
@@ -174,14 +190,48 @@ public class Controller {
     }
 
     private void addText(String msg){
+        String[] tokens = msg.split(":",2);
+        String nickSender = tokens[0];
+
+        if (!nickname.equals(nickSender)){
+
+            if (clientsList.getSelectionModel().getSelectedItem()!=null) {
+                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
+                    //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
+                    if (vBoxCollection.containsKey(nickSender)) {
+                        vBoxChat = vBoxCollection.get(nickSender);
+                    } else {
+                        vBoxChat = new VBox();
+                        vBoxCollection.put(nickSender, vBoxChat);
+                    }
+
+                    int index = clientsList.getItems().indexOf(nickSender);
+                    if (index!=-1) {
+                        clientsList.getItems().set(index, nickSender + "*");
+                    }
+                }
+            } else {
+                //что здесь? если здесь, значит у клиента приемника коллекция вбоксов пуста... значит просто создаю объект в коллекции
+                if (vBoxCollection.containsKey(nickSender)) {
+                    vBoxChat = vBoxCollection.get(nickSender);
+                } else {
+                    vBoxChat = new VBox();
+                    vBoxCollection.put(nickSender, vBoxChat);
+
+                    // вроде как здесь точно место этой конструкции. если ни один чат не выделен, то ставим * при первом сообщении в этот чат
+                    // продолжая писать в этот чат алгоритм попадет в верхнюю ветку if, где программа не смотрит на clientList и звездочки в нем
+                    int index = clientsList.getItems().indexOf(nickSender);
+                    clientsList.getItems().set(index, nickSender+"*");
+                }
+            }
+        }
+
         VBox vb = new VBox();
         HBox hb = new HBox();
         VBox vb1 = new VBox();
         VBox vb2 = new VBox();
 
-        String[] tokens = msg.split(":",2);
-
-        if (tokens[0].equals(nickname)) {
+        if (nickSender.equals(nickname)) {
             vb1.getChildren().add(new TextMessage(msg));
             vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         }else {
@@ -192,12 +242,12 @@ public class Controller {
         hb.getChildren().addAll(vb1, vb2);
         vb.getChildren().add(hb);
 
-        vBox1.getChildren().addAll(vb);
+        vBoxChat.getChildren().addAll(vb);
         listView.scrollTo(listView.getItems().size());
     }
 
     public void clearWindow(){
-        vBox1.getChildren().clear();
+        vBoxChat.getChildren().clear();
     }
 
     public void closeWindow(){
@@ -206,14 +256,18 @@ public class Controller {
     }
 
     public void sendMsg(){
-        if (!textField.getText().isEmpty()) {
-            try {
-                vBox1.setSpacing(10);
-                out.writeUTF(textField.getText());
-                textField.clear();
-                textField.requestFocus();
-            } catch (IOException e) {
-                e.printStackTrace();
+        if (clientsList.getSelectionModel().getSelectedItem()!=null) {
+            if (!textField.getText().isEmpty()) {
+                try {
+                    if (clientsList.getSelectionModel().getSelectedItem() != null) {
+                        vBoxChat.setSpacing(10);
+                        out.writeUTF(clientsList.getSelectionModel().getSelectedItem().toString() + ":" + textField.getText());
+                        textField.clear();
+                        textField.requestFocus();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -368,5 +422,26 @@ public class Controller {
             window.initModality(Modality.WINDOW_MODAL);
         }
         window.show();
+    }
+
+    public void selectClient(MouseEvent mouseEvent) {
+        setVBox(clientsList.getSelectionModel().getSelectedItem().toString());
+    }
+
+    private void setVBox(String nick) {
+        if (nick.endsWith("*")) {
+            int index = clientsList.getItems().indexOf(nick);
+            nick = nick.replace("*", "");
+            clientsList.getItems().set(index, nick);
+        }
+
+        if (vBoxCollection.containsKey(nick)) {
+            vBoxChat = vBoxCollection.get(nick);
+        }else {
+            vBoxChat = new VBox();
+            vBoxCollection.put(nick,vBoxChat);
+        }
+        splitPane.getItems().clear();
+        splitPane.getItems().add(vBoxChat);
     }
 }

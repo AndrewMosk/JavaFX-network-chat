@@ -17,9 +17,12 @@
 .split-pane .viewport{-fx-background-color: transparent;}
 .split-pane .content{-fx-background-color: transparent;}
 
-.list-view .list-cell:even {-fx-background-color: transparent;}
-.list-view .list-cell:odd {-fx-background-color: transparent;}
-.list-view {-fx-background-color: transparent;}
+#listView .list-cell:even {-fx-background-color: transparent;}
+#listView .list-cell:odd {-fx-background-color: transparent;}
+#listView {-fx-background-color: transparent;}
+.split-pane-divider {
+  -fx-padding: 0;
+}
 
 .text-field {
     //-fx-background-color: white;

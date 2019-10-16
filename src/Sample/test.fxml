@@ -8,9 +8,9 @@
 
 <AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Sample.Test">
    <children>
-      <ScrollPane>
+      <ScrollPane AnchorPane.rightAnchor="500.0">
          <content>
-            <SplitPane>
+            <SplitPane dividerPositions="0.5">
                <items>
                   <VBox prefHeight="200.0" prefWidth="100.0" />
                   <VBox prefHeight="200.0" prefWidth="100.0" />
