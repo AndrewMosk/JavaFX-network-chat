@@ -150,7 +150,7 @@ public class Controller {
                                 setAuthorized(false);
                                 Platform.runLater(() -> {
                                     setNewTitle("");
-                                    vBoxChat.getChildren().clear();
+                                    vBoxChat.getChildren().clear();//ПЕРЕДЕЛАТЬ ---> ОТПРАВЛЯТЬ В ПРОЦЕДУРУ ОЧИСТКИ ВБОКСА ВМЕСТЕ С АПДЕЙТОМ КОЛЛЕКЦИИ!
                                 });
                             }else if (msg.startsWith("/clientslist")){
                                 String[] tokens = msg.split(" ");
@@ -195,14 +195,34 @@ public class Controller {
     }
 
     private void addText(String msg){
+        String[] tokens = msg.split(":",2);
+        String nickReceiver = tokens[0];
+        if (!nickname.equals(nickReceiver)){
+
+            if (clientsList.getSelectionModel().getSelectedItem()!=null) {
+                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickReceiver)) {
+                    //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
+                    if (vBoxCollection.containsKey(nickReceiver)) {
+                        vBoxChat = vBoxCollection.get(nickReceiver);
+                    } else {
+                        vBoxChat = new VBox();
+                        vBoxCollection.put(nickReceiver, vBoxChat);
+                    }
+                }
+            } else {
+                //что здесь? если здесь, значит у клиента приемника коллекция вбоксов пуста... значит просто создаю объект в коллекции
+                vBoxChat = new VBox();
+                vBoxCollection.put(nickReceiver, vBoxChat);
+            }
+
+        }
+
         VBox vb = new VBox();
         HBox hb = new HBox();
         VBox vb1 = new VBox();
         VBox vb2 = new VBox();
 
-        String[] tokens = msg.split(":",2);
-
-        if (tokens[0].equals(nickname)) {
+        if (nickReceiver.equals(nickname)) {
             vb1.getChildren().add(new TextMessage(msg));
             vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         }else {

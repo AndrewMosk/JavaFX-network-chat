@@ -81,7 +81,6 @@ class ClientHandler {
                                     }
                                 }
                             }else {
-                                System.out.println(nick + ": " + msg);
                                 serv.sendMessage(nick + ":" + msg);
                             }
                         }
