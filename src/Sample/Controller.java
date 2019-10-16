@@ -86,11 +86,6 @@ public class Controller {
             bottomPanel.setManaged(true);
             clientsList.setVisible(true);
             clientsList.setManaged(true);
-            //комментирую - пока не решил нужно ли это делать здесь?
-            //т.е. здесь этого точно делать не нужно, если сделать следующее: как-то маркировать непрочитанные сообщения в списке клиентов онлайн.
-            //как в телеге. ты открыл чат, но клиента для общения не выбрал - область чиста. но если тебе отправят сообщение, то это сразу станет видно и кликнув на
-            //отправителя канва станет видна.
-            //splitPane.getItems().add(vBoxChat);
         }
     }
 
@@ -196,25 +191,39 @@ public class Controller {
 
     private void addText(String msg){
         String[] tokens = msg.split(":",2);
-        String nickReceiver = tokens[0];
-        if (!nickname.equals(nickReceiver)){
+        String nickSender = tokens[0];
+
+        if (!nickname.equals(nickSender)){
 
             if (clientsList.getSelectionModel().getSelectedItem()!=null) {
-                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickReceiver)) {
+                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
                     //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
-                    if (vBoxCollection.containsKey(nickReceiver)) {
-                        vBoxChat = vBoxCollection.get(nickReceiver);
+                    if (vBoxCollection.containsKey(nickSender)) {
+                        vBoxChat = vBoxCollection.get(nickSender);
                     } else {
                         vBoxChat = new VBox();
-                        vBoxCollection.put(nickReceiver, vBoxChat);
+                        vBoxCollection.put(nickSender, vBoxChat);
+                    }
+
+                    int index = clientsList.getItems().indexOf(nickSender);
+                    if (index!=-1) {
+                        clientsList.getItems().set(index, nickSender + "*");
                     }
                 }
             } else {
                 //что здесь? если здесь, значит у клиента приемника коллекция вбоксов пуста... значит просто создаю объект в коллекции
-                vBoxChat = new VBox();
-                vBoxCollection.put(nickReceiver, vBoxChat);
-            }
+                if (vBoxCollection.containsKey(nickSender)) {
+                    vBoxChat = vBoxCollection.get(nickSender);
+                } else {
+                    vBoxChat = new VBox();
+                    vBoxCollection.put(nickSender, vBoxChat);
 
+                    // вроде как здесь точно место этой конструкции. если ни один чат не выделен, то ставим * при первом сообщении в этот чат
+                    // продолжая писать в этот чат алгоритм попадет в верхнюю ветку if, где программа не смотрит на clientList и звездочки в нем
+                    int index = clientsList.getItems().indexOf(nickSender);
+                    clientsList.getItems().set(index, nickSender+"*");
+                }
+            }
         }
 
         VBox vb = new VBox();
@@ -222,7 +231,7 @@ public class Controller {
         VBox vb1 = new VBox();
         VBox vb2 = new VBox();
 
-        if (nickReceiver.equals(nickname)) {
+        if (nickSender.equals(nickname)) {
             vb1.getChildren().add(new TextMessage(msg));
             vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         }else {
@@ -247,16 +256,18 @@ public class Controller {
     }
 
     public void sendMsg(){
-        if (!textField.getText().isEmpty()) {
-            try {
-                if (clientsList.getSelectionModel().getSelectedItem() != null) {
-                    vBoxChat.setSpacing(10);
-                    out.writeUTF(clientsList.getSelectionModel().getSelectedItem().toString() + ":" +textField.getText());
-                    textField.clear();
-                    textField.requestFocus();
+        if (clientsList.getSelectionModel().getSelectedItem()!=null) {
+            if (!textField.getText().isEmpty()) {
+                try {
+                    if (clientsList.getSelectionModel().getSelectedItem() != null) {
+                        vBoxChat.setSpacing(10);
+                        out.writeUTF(clientsList.getSelectionModel().getSelectedItem().toString() + ":" + textField.getText());
+                        textField.clear();
+                        textField.requestFocus();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
             }
         }
     }
@@ -418,6 +429,12 @@ public class Controller {
     }
 
     private void setVBox(String nick) {
+        if (nick.endsWith("*")) {
+            int index = clientsList.getItems().indexOf(nick);
+            nick = nick.replace("*", "");
+            clientsList.getItems().set(index, nick);
+        }
+
         if (vBoxCollection.containsKey(nick)) {
             vBoxChat = vBoxCollection.get(nick);
         }else {
