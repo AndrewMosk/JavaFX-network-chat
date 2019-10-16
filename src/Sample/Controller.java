@@ -8,16 +8,12 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
-import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.effect.BlendMode;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -81,7 +77,8 @@ public class Controller {
             bottomPanel.setManaged(false);
             clientsList.setVisible(false);
             clientsList.setManaged(false);
-            splitPane.getItems().removeAll();
+            //а здесь нужна очистка? пожалуй - да
+            splitPane.getItems().clear();
         }else {
             VBoxUpperPanel.setVisible(false);
             VBoxUpperPanel.setManaged(false);
@@ -89,7 +86,11 @@ public class Controller {
             bottomPanel.setManaged(true);
             clientsList.setVisible(true);
             clientsList.setManaged(true);
-            splitPane.getItems().add(vBoxChat);
+            //комментирую - пока не решил нужно ли это делать здесь?
+            //т.е. здесь этого точно делать не нужно, если сделать следующее: как-то маркировать непрочитанные сообщения в списке клиентов онлайн.
+            //как в телеге. ты открыл чат, но клиента для общения не выбрал - область чиста. но если тебе отправят сообщение, то это сразу станет видно и кликнув на
+            //отправителя канва станет видна.
+            //splitPane.getItems().add(vBoxChat);
         }
     }
 
@@ -401,9 +402,9 @@ public class Controller {
             vBoxChat = vBoxCollection.get(nick);
         }else {
             vBoxChat = new VBox();
+            vBoxCollection.put(nick,vBoxChat);
         }
-        splitPane.getItems().removeAll();
+        splitPane.getItems().clear();
         splitPane.getItems().add(vBoxChat);
-
     }
 }
