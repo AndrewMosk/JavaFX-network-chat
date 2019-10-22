@@ -43,6 +43,7 @@ public class Controller {
     ListView listView;
     @FXML
     ListView clientsList;
+    private Map<String, Integer> messageCounterCollection = new HashMap<>();
 
     private Socket socket;
     private DataInputStream in;
@@ -189,11 +190,31 @@ public class Controller {
         }
     }
 
+    private String getNickCounter(String nickOriginal, String nickSenderCounter, int counter){
+        String result;
+        if (counter==0) {
+            result = nickOriginal;
+        }else {
+
+            nickSenderCounter = nickSenderCounter.substring(0, nickOriginal.length());
+            result =  nickSenderCounter + "(" + counter + ")";
+        }
+
+        return result;
+    }
+
     private void addText(String msg){
         String[] tokens = msg.split(":",2);
         String nickSender = tokens[0];
+        String nickSenderCounter = tokens[0];
+
+        //ошибка при нажатии на список клиентов, если там никого нет
+        //выделение сбрасыватеся, когда кликаешь при непринятых сообщениях
 
         if (!nickname.equals(nickSender)){
+            if (!messageCounterCollection.containsKey(nickSender)){
+                messageCounterCollection.put(nickSender,0);
+            }
 
             if (clientsList.getSelectionModel().getSelectedItem()!=null) {
                 if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
@@ -205,25 +226,34 @@ public class Controller {
                         vBoxCollection.put(nickSender, vBoxChat);
                     }
 
-                    int index = clientsList.getItems().indexOf(nickSender);
-                    if (index!=-1) {
-                        clientsList.getItems().set(index, nickSender + "*");
-                    }
+                    int messageCounter = messageCounterCollection.get(nickSender);
+                    int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    messageCounter++;
+                    clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    messageCounterCollection.replace(nickSender,messageCounter);
                 }
             } else {
-                //что здесь? если здесь, значит у клиента приемника коллекция вбоксов пуста... значит просто создаю объект в коллекции
                 if (vBoxCollection.containsKey(nickSender)) {
                     vBoxChat = vBoxCollection.get(nickSender);
                 } else {
                     vBoxChat = new VBox();
                     vBoxCollection.put(nickSender, vBoxChat);
-
-                    // вроде как здесь точно место этой конструкции. если ни один чат не выделен, то ставим * при первом сообщении в этот чат
-                    // продолжая писать в этот чат алгоритм попадет в верхнюю ветку if, где программа не смотрит на clientList и звездочки в нем
-                    int index = clientsList.getItems().indexOf(nickSender);
-                    clientsList.getItems().set(index, nickSender+"*");
                 }
+
+                int messageCounter = messageCounterCollection.get(nickSender);
+                int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                messageCounter++;
+                clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                messageCounterCollection.replace(nickSender,messageCounter);
             }
+//            if (!messageCounterCollection.containsKey(nickSender)){
+//                messageCounterCollection.put(nickSender,0);
+//            }
+//            int messageCounter = messageCounterCollection.get(nickSender);
+//            int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+//            messageCounter++;
+//            clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+//            messageCounterCollection.replace(nickSender,messageCounter);
         }
 
         VBox vb = new VBox();
@@ -429,10 +459,12 @@ public class Controller {
     }
 
     private void setVBox(String nick) {
-        if (nick.endsWith("*")) {
+        //запретить при регистрации в нике использовать скобки (...) да и дргуие спец символы : например
+        if (nick.contains("(")){
             int index = clientsList.getItems().indexOf(nick);
-            nick = nick.replace("*", "");
+            nick = nick.substring(0,nick.indexOf("("));
             clientsList.getItems().set(index, nick);
+            messageCounterCollection.replace(nick,0);
         }
 
         if (vBoxCollection.containsKey(nick)) {
