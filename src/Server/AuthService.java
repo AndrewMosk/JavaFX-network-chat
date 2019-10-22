@@ -4,6 +4,7 @@ import org.sqlite.SQLiteException;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 
 class AuthService {
     private static Connection connection;
@@ -117,5 +118,32 @@ class AuthService {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+    static void writeHistory(int id_user1, int id_user2, String message) {
+        try {
+            String sql = String.format("INSERT INTO history (id_user1, id_user2, date, message) VALUES('%s')", id_user1, id_user2, new Date(), message);
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static String getHistory(int id_user1, int id_user2) {
+        String result = "";
+        try {
+            String sql = String.format("SELECT message FROM history WHERE (id_user1 = '%s' AND id_user2 = '%s') OR (id_user1 = '%s' AND id_user2 = '%s') ORDER BY date LIMIT 5",
+                    id_user1,id_user2,id_user2,id_user1);
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()){
+                result += rs.getString("message") + "\n";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        //убираю последний символ перехода строки
+        if (!result.isEmpty()) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 }

@@ -119,6 +119,12 @@ public class Controller {
                                 //setAuthorized(true);
                                 Platform.runLater(() -> {
                                     setNewTitle(tokens[1]);
+                                    //не здесь вызов, а при активации юзера в списке клиентов!!
+//                                    try {
+//                                        out.writeUTF("/get_history " + nickname); //нужно отправлять историю только тому, кто только что авторизовался!
+//                                    } catch (IOException e) {
+//                                        e.printStackTrace();
+//                                    }
                                     setAuthorized(true);
                                 });
                                 break;
