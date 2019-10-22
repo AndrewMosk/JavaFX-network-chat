@@ -43,6 +43,7 @@ public class Controller {
     ListView listView;
     @FXML
     ListView clientsList;
+    private Map<String, Integer> messageCounterCollection = new HashMap<>();
 
     private Socket socket;
     private DataInputStream in;
@@ -120,11 +121,14 @@ public class Controller {
                                 Platform.runLater(() -> {
                                     setNewTitle(tokens[1]);
                                     //не здесь вызов, а при активации юзера в списке клиентов!!
-//                                    try {
-//                                        out.writeUTF("/get_history " + nickname); //нужно отправлять историю только тому, кто только что авторизовался!
-//                                    } catch (IOException e) {
-//                                        e.printStackTrace();
-//                                    }
+                                    //решил, что все таки здесь! :-)
+                                    try {
+                                        out.writeUTF("/get_history " + nickname); //нужно отправлять историю только тому, кто только что авторизовался!
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+
+
                                     setAuthorized(true);
                                 });
                                 break;
@@ -168,6 +172,9 @@ public class Controller {
                             } else if (msg.startsWith("/blacklist")) {
                                 String[] tokens = msg.split(" ", 3);
                                 Platform.runLater(() -> showAlertWithHeaderText(tokens[2], "Пользователь " + tokens[1]));
+                            }else if (msg.startsWith("/history")) {
+                                String[] tokens = msg.split(" ", 2);
+                                fillHistory(tokens[1]);
                             } else {
                                 Platform.runLater(() -> addText(msg));
                             }
@@ -195,11 +202,79 @@ public class Controller {
         }
     }
 
+    private void fillHistory(String history) {
+        String[] strings = history.split("/");
+        for (String str:strings) {
+            String nickSender;
+            //String nickReceiver;
+            String collectionOwner;
+            String[] tokens = str.split(" ",3);
+            nickSender = tokens[0];
+
+            if (nickname.equals(tokens[0])) {
+                collectionOwner = tokens[1];
+            }else {
+                collectionOwner = tokens[0];
+            }
+            insertIntoVBox(nickSender, collectionOwner, tokens[2]);
+        }
+    }
+
+    private void insertIntoVBox(String nickSender, String collectionOwner, String msg) {
+        VBox vBoxChat = new VBox();
+
+        if (vBoxCollection.containsKey(collectionOwner)) {
+            vBoxChat = vBoxCollection.get(collectionOwner);
+        }else {
+            vBoxCollection.put(collectionOwner,vBoxChat);
+        }
+
+        VBox vb = new VBox();
+        HBox hb = new HBox();
+        VBox vb1 = new VBox();
+        VBox vb2 = new VBox();
+
+        if (nickSender.equals(nickname)) {
+            vb1.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
+        }else {
+            vb2.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        }
+
+        hb.getChildren().addAll(vb1, vb2);
+        vb.getChildren().add(hb);
+
+        vBoxChat.getChildren().addAll(vb);
+        //listView.scrollTo(listView.getItems().size());
+    }
+
+    private String getNickCounter(String nickOriginal, String nickSenderCounter, int counter){
+        String result;
+        if (counter==0) {
+            result = nickOriginal;
+        }else {
+
+            nickSenderCounter = nickSenderCounter.substring(0, nickOriginal.length());
+            result =  nickSenderCounter + "(" + counter + ")";
+        }
+
+        return result;
+    }
+
     private void addText(String msg){
         String[] tokens = msg.split(":",2);
         String nickSender = tokens[0];
+        String nickSenderCounter = tokens[0];
+
+        //ошибка при нажатии на список клиентов, если там никого нет
+        //счетчик пояаляется даже, если у обоих клиентов активны чаты друг друга
+        //выделение сбрасыватеся, когда кликаешь при непринятых сообщениях
 
         if (!nickname.equals(nickSender)){
+            if (!messageCounterCollection.containsKey(nickSender)){
+                messageCounterCollection.put(nickSender,0);
+            }
 
             if (clientsList.getSelectionModel().getSelectedItem()!=null) {
                 if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
@@ -211,24 +286,25 @@ public class Controller {
                         vBoxCollection.put(nickSender, vBoxChat);
                     }
 
-                    int index = clientsList.getItems().indexOf(nickSender);
-                    if (index!=-1) {
-                        clientsList.getItems().set(index, nickSender + "*");
-                    }
+                    int messageCounter = messageCounterCollection.get(nickSender);
+                    int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    messageCounter++;
+                    clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    messageCounterCollection.replace(nickSender,messageCounter);
                 }
             } else {
-                //что здесь? если здесь, значит у клиента приемника коллекция вбоксов пуста... значит просто создаю объект в коллекции
                 if (vBoxCollection.containsKey(nickSender)) {
                     vBoxChat = vBoxCollection.get(nickSender);
                 } else {
                     vBoxChat = new VBox();
                     vBoxCollection.put(nickSender, vBoxChat);
-
-                    // вроде как здесь точно место этой конструкции. если ни один чат не выделен, то ставим * при первом сообщении в этот чат
-                    // продолжая писать в этот чат алгоритм попадет в верхнюю ветку if, где программа не смотрит на clientList и звездочки в нем
-                    int index = clientsList.getItems().indexOf(nickSender);
-                    clientsList.getItems().set(index, nickSender+"*");
                 }
+
+                int messageCounter = messageCounterCollection.get(nickSender);
+                int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                messageCounter++;
+                clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                messageCounterCollection.replace(nickSender,messageCounter);
             }
         }
 
@@ -431,7 +507,35 @@ public class Controller {
     }
 
     public void selectClient(MouseEvent mouseEvent) {
-        setVBox(clientsList.getSelectionModel().getSelectedItem().toString());
+        String nickReceiver = clientsList.getSelectionModel().getSelectedItem().toString();
+        setVBox(nickReceiver);
+        //где именно поставить? ведь подтягивать историю нужно только 1 раз!! когда вбокс еще не создан!
+        //и что получается? нужно делать следующее: список клиентов должен быть всегда - независимо онлайн они или нет (если онлайн, то нужно просто как-то помечать это!)
+        //и при открытии чата нужно сразу потдягивать историю ВСЕХ чатов, которые уже имел пользователь!
+        //т.е. делать запросы в базу, создавать вбоксы, заносить в них историю в хронологическом порядке и уже иметь аозможность переключаться между ними!
+
+        //значит при нажатии на пользователя уже не будет ситуации, при которой вбокс еще не будет создан. в списке пока будут все клиенты из базы
+        //получается, что можно как в телеге будет отправлять сообщение клиенту офлайн, а ему после открытия чата все придет
+        // вот только как реализовать непринятые сообщения?? ладно, об этом подумаю позже...
+
+        //за то ситуация с историей (с запросом) несколько облегчается - не нужно теперь разные комбинации ников проверять... за то нужно группировать!
+        //т.е. нужно выбрать все строки из таблицы, в которых фигурирует заданный ник (неважно в каком столбце).
+
+        //важно еще продумать вот что - как все таки записывать историю переписки двух ников? думаю, что все таки лучше делать так: отправил сообщение - записал в историю
+        //тогда хранение истории в таблице будет выглядеть аналгоично чату - ники будут чередоваться. скорее всего это облегчит их последующий разбор и добавление в вбокс
+
+        //и как будет выглядеть запрос в базу? основой ляжет ник, пользователя, который открывает окно. т.е. нужны все строки из таблицы, где в одной из колонок фигурирует скажем ник1
+
+        //а может поступить след образом? зачем делать именно с начала одну историю, а потом следующую и следующую и.т.д.?
+        //записи выводятся в хронологическом порядке, ник, что справа - отправитель, ник слева - приемник. сразу создать коллекци. пришел ник, отличный от того, чью истории грузим -
+        //проверка - есть в коллекции или нет. нет - создаем, есть подтягиваем из коллекции и заносим сообщение. следующий - так же... пришло из того же чата - значит опять ищем по
+        //нику в коллекции и добавляем, из другого чата - ищем (создаем новый и добавляем) - вроде должно сработать
+
+//        try {
+//            out.writeUTF("/get_history " + nickname + " " + nickReceiver);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private void setVBox(String nick) {

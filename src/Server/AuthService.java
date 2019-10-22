@@ -128,14 +128,15 @@ class AuthService {
         }
     }
 
-    static String getHistory(int id_user1, int id_user2) {
+    static String getHistory(String nick) {
         String result = "";
         try {
-            String sql = String.format("SELECT message FROM history WHERE (id_user1 = '%s' AND id_user2 = '%s') OR (id_user1 = '%s' AND id_user2 = '%s') ORDER BY date LIMIT 5",
-                    id_user1,id_user2,id_user2,id_user1);
+            String sql = String.format("SELECT senders.nickname AS sender, receivers.nickname AS receiver, history.date, history.message FROM history " +
+                                        "JOIN main AS senders ON senders.id = history.id_user1 " +
+                                        "JOIN main AS receivers ON receivers.id = history.id_user2 WHERE sender = '%s' OR receiver = '%s'",  nick, nick);
             ResultSet rs = stmt.executeQuery(sql);
             while (rs.next()){
-                result += rs.getString("message") + "\n";
+                result += rs.getString(1) + " " + rs.getString(2) + " " + rs.getString(4) + "/";
             }
         } catch (SQLException e) {
             e.printStackTrace();

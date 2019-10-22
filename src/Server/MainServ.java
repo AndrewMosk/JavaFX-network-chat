@@ -106,11 +106,11 @@ class MainServ {
         return AuthService.addUserToBlackList(nick,nickToBlackList);
     }
 
-    void sendHistory(String nick) {
+    void sendHistory(String nickSender) {
         for (ClientHandler client : clients) {
-            if (client.getNick().equals(nick)) {
-                String history = AuthService.getHistory();
-                client.sendMessage(history);
+            if (client.getNick().equals(nickSender)) {
+                String history = AuthService.getHistory(nickSender);
+                client.sendMessage("/history " + history);
                 return;
             }
         }
