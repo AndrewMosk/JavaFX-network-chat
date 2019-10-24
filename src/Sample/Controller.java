@@ -1,6 +1,7 @@
 package Sample;
 
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -120,9 +121,9 @@ public class Controller {
                                 //setAuthorized(true);
                                 Platform.runLater(() -> {
                                     setNewTitle(tokens[1]);
-                                    //не здесь вызов, а при активации юзера в списке клиентов!!
-                                    //решил, что все таки здесь! :-)
+                                    //fillClientsList();
                                     try {
+                                        out.writeUTF("/get_clientList " + nickname);
                                         out.writeUTF("/get_history " + nickname); //нужно отправлять историю только тому, кто только что авторизовался!
                                     } catch (IOException e) {
                                         e.printStackTrace();
@@ -157,16 +158,29 @@ public class Controller {
                                     setNewTitle("");
                                     vBoxChat.getChildren().clear();//ПЕРЕДЕЛАТЬ ---> ОТПРАВЛЯТЬ В ПРОЦЕДУРУ ОЧИСТКИ ВБОКСА ВМЕСТЕ С АПДЕЙТОМ КОЛЛЕКЦИИ!
                                 });
-                            }else if (msg.startsWith("/clientslist")){
-                                String[] tokens = msg.split(" ");
+                            }else if (msg.startsWith("/clientList")){
+                                //создание и заполнение списка clientsList
+                                String[] tokens = msg.split(" ",2);
                                 Platform.runLater(() -> {
-                                    clientsList.getItems().clear();
-                                    for (int i = 1; i < tokens.length; i++) {
-                                        if (!tokens[i].equals(nickname)) {
-                                            clientsList.getItems().add(tokens[i]);
-                                        }
-                                    }
+                                    fillClientsList(tokens[1]);
                                 });
+
+
+                                //ТУТ ТРЕБУЕТСЯ ИЗМЕНИТЬ! ТЕПЕРЬ ПРИ ПРИХОДЕ ДАННОГО КЛЮЧЕВОГО СЛОВА БУДЕТ СОДЕРЖАТЬСЯ ИНФА ОТ 1 КЛИЕНТА - ОНЛАЙН ОН ИЛИ ОФФЛАЙН!
+                                //КЛИЕНТ ТОТ БУДЕТ ДВАЖДЫ ОТПРАВЛЯТЬ ВСЕМ СВОЙ СТАТУС - ПРИ УСПЕШНОЙ АВТОРИЗАЦИИ - ОНЛАЙН, ПРИ ОТКЛЮЧЕНИИ - ОФФЛАЙН
+                                //тут будет /clientstatus!!!!
+
+
+//                                String[] tokens = msg.split(" ");
+//                                Platform.runLater(() -> {
+//                                markClient(true);
+////                                    clientsList.getItems().clear();
+////                                    for (int i = 1; i < tokens.length; i++) {
+////                                        if (!tokens[i].equals(nickname)) {
+////                                            clientsList.getItems().add(tokens[i]);
+////                                        }
+////                                    }
+//                                });
                             } else if (msg.equals("Ошибка добавления в черный список")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
                             } else if (msg.startsWith("/blacklist")) {
@@ -175,7 +189,12 @@ public class Controller {
                             }else if (msg.startsWith("/history")) {
                                 String[] tokens = msg.split(" ", 2);
                                 fillHistory(tokens[1]);
+                            }else if (msg.startsWith("/clientStatus")) {
+                                String[] tokens = msg.split(" ", 3);
+                                markClient(tokens[1],tokens[2]);
+
                             } else {
+                                System.out.println(msg);
                                 Platform.runLater(() -> addText(msg));
                             }
                         }
@@ -199,6 +218,41 @@ public class Controller {
 
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void markClient(String nick, String status) {
+        ObservableList list = clientsList.getItems();
+        for (Object obj : list) {
+            HBox box = (HBox) obj;
+            String labelString = box.getChildren().get(0).toString();
+            String[] parseLabelString = labelString.split("'", 3);
+            if (parseLabelString[1].equals(nick)) {
+                Button button = (Button) box.getChildren().get(1);
+                if (status.equals("true")){
+                    button.setStyle("-fx-background-radius: 5em; -fx-min-width: 5px; -fx-min-height: 5px; -fx-max-width: 5px; -fx-max-height: 5px; -fx-background-color: green;");
+                }else {
+                    button.setStyle("-fx-background-radius: 5em; -fx-min-width: 5px; -fx-min-height: 5px; -fx-max-width: 5px; -fx-max-height: 5px; -fx-background-color: red;");
+                }
+            }
+        }
+    }
+
+    private void fillClientsList(String message) {
+        String[] tokens = message.split("/");
+        for (String nick_status: tokens) {
+            String[] parse_nick_status = nick_status.split(" ");
+            HBox hbox = new HBox();
+            Label label = new Label(parse_nick_status[0]);
+            Button button = new Button("");
+            button.setDisable(true);
+            hbox.getChildren().addAll(label,button);
+
+            String color;
+            if (parse_nick_status[1].equals("online")) color = "green;";
+            else color = "red;";
+            button.setStyle("-fx-background-radius: 5em; -fx-min-width: 5px; -fx-min-height: 5px; -fx-max-width: 5px; -fx-max-height: 5px; -fx-background-color: " + color);
+            clientsList.getItems().add(hbox);
         }
     }
 
@@ -271,42 +325,42 @@ public class Controller {
         //счетчик пояаляется даже, если у обоих клиентов активны чаты друг друга
         //выделение сбрасыватеся, когда кликаешь при непринятых сообщениях
 
-        if (!nickname.equals(nickSender)){
-            if (!messageCounterCollection.containsKey(nickSender)){
-                messageCounterCollection.put(nickSender,0);
-            }
-
-            if (clientsList.getSelectionModel().getSelectedItem()!=null) {
-                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
-                    //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
-                    if (vBoxCollection.containsKey(nickSender)) {
-                        vBoxChat = vBoxCollection.get(nickSender);
-                    } else {
-                        vBoxChat = new VBox();
-                        vBoxCollection.put(nickSender, vBoxChat);
-                    }
-
-                    int messageCounter = messageCounterCollection.get(nickSender);
-                    int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
-                    messageCounter++;
-                    clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
-                    messageCounterCollection.replace(nickSender,messageCounter);
-                }
-            } else {
-                if (vBoxCollection.containsKey(nickSender)) {
-                    vBoxChat = vBoxCollection.get(nickSender);
-                } else {
-                    vBoxChat = new VBox();
-                    vBoxCollection.put(nickSender, vBoxChat);
-                }
-
-                int messageCounter = messageCounterCollection.get(nickSender);
-                int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
-                messageCounter++;
-                clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
-                messageCounterCollection.replace(nickSender,messageCounter);
-            }
-        }
+//        if (!nickname.equals(nickSender)){
+//            if (!messageCounterCollection.containsKey(nickSender)){
+//                messageCounterCollection.put(nickSender,0);
+//            }
+//
+//            if (clientsList.getSelectionModel().getSelectedItem()!=null) {
+//                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
+//                    //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
+//                    if (vBoxCollection.containsKey(nickSender)) {
+//                        vBoxChat = vBoxCollection.get(nickSender);
+//                    } else {
+//                        vBoxChat = new VBox();
+//                        vBoxCollection.put(nickSender, vBoxChat);
+//                    }
+//
+//                    int messageCounter = messageCounterCollection.get(nickSender);
+//                    int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+//                    messageCounter++;
+//                    clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+//                    messageCounterCollection.replace(nickSender,messageCounter);
+//                }
+//            } else {
+//                if (vBoxCollection.containsKey(nickSender)) {
+//                    vBoxChat = vBoxCollection.get(nickSender);
+//                } else {
+//                    vBoxChat = new VBox();
+//                    vBoxCollection.put(nickSender, vBoxChat);
+//                }
+//
+//                int messageCounter = messageCounterCollection.get(nickSender);
+//                int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+//                messageCounter++;
+//                clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+//                messageCounterCollection.replace(nickSender,messageCounter);
+//            }
+//        }
 
         VBox vb = new VBox();
         HBox hb = new HBox();
@@ -343,7 +397,8 @@ public class Controller {
                 try {
                     if (clientsList.getSelectionModel().getSelectedItem() != null) {
                         vBoxChat.setSpacing(10);
-                        out.writeUTF(clientsList.getSelectionModel().getSelectedItem().toString() + ":" + textField.getText());
+                        String nick = parseNick(clientsList.getSelectionModel().getSelectedItem());
+                        out.writeUTF(nick + ":" + textField.getText());
                         textField.clear();
                         textField.requestFocus();
                     }
@@ -352,6 +407,14 @@ public class Controller {
                 }
             }
         }
+    }
+
+    private String parseNick(Object item) {
+        HBox hBox = (HBox) item;
+
+        String labelString = hBox.getChildren().get(0).toString();
+        String[] parseLabelString = labelString.split("'",3);
+        return parseLabelString[1];
     }
 
     public void tryToAuth(ActionEvent actionEvent) {
@@ -507,7 +570,12 @@ public class Controller {
     }
 
     public void selectClient(MouseEvent mouseEvent) {
-        String nickReceiver = clientsList.getSelectionModel().getSelectedItem().toString();
+        HBox hBox = (HBox) clientsList.getSelectionModel().getSelectedItem();
+//        Label label = new Label("ttt");
+//        label.getText();
+        String labelString = hBox.getChildren().get(0).toString();
+        String[] parseLabelString = labelString.split("'",3);
+        String nickReceiver = parseLabelString[1];
         setVBox(nickReceiver);
         //где именно поставить? ведь подтягивать историю нужно только 1 раз!! когда вбокс еще не создан!
         //и что получается? нужно делать следующее: список клиентов должен быть всегда - независимо онлайн они или нет (если онлайн, то нужно просто как-то помечать это!)
