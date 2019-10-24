@@ -164,23 +164,6 @@ public class Controller {
                                 Platform.runLater(() -> {
                                     fillClientsList(tokens[1]);
                                 });
-
-
-                                //ТУТ ТРЕБУЕТСЯ ИЗМЕНИТЬ! ТЕПЕРЬ ПРИ ПРИХОДЕ ДАННОГО КЛЮЧЕВОГО СЛОВА БУДЕТ СОДЕРЖАТЬСЯ ИНФА ОТ 1 КЛИЕНТА - ОНЛАЙН ОН ИЛИ ОФФЛАЙН!
-                                //КЛИЕНТ ТОТ БУДЕТ ДВАЖДЫ ОТПРАВЛЯТЬ ВСЕМ СВОЙ СТАТУС - ПРИ УСПЕШНОЙ АВТОРИЗАЦИИ - ОНЛАЙН, ПРИ ОТКЛЮЧЕНИИ - ОФФЛАЙН
-                                //тут будет /clientstatus!!!!
-
-
-//                                String[] tokens = msg.split(" ");
-//                                Platform.runLater(() -> {
-//                                markClient(true);
-////                                    clientsList.getItems().clear();
-////                                    for (int i = 1; i < tokens.length; i++) {
-////                                        if (!tokens[i].equals(nickname)) {
-////                                            clientsList.getItems().add(tokens[i]);
-////                                        }
-////                                    }
-//                                });
                             } else if (msg.equals("Ошибка добавления в черный список")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
                             } else if (msg.startsWith("/blacklist")) {
@@ -194,7 +177,7 @@ public class Controller {
                                 markClient(tokens[1],tokens[2]);
 
                             } else {
-                                System.out.println(msg);
+                                //System.out.println(msg);
                                 Platform.runLater(() -> addText(msg));
                             }
                         }
@@ -316,51 +299,81 @@ public class Controller {
         return result;
     }
 
+    private void unreadMessages(String nickSender, String nickSenderCounter) {
+        System.out.println("unreadMessages");
+        if (!nickname.equals(nickSender)){
+            if (!messageCounterCollection.containsKey(nickSender)){
+                messageCounterCollection.put(nickSender,0);
+            }
+
+            if (clientsList.getSelectionModel().getSelectedItem()!=null) {
+                if (!parseNick(clientsList.getSelectionModel().getSelectedItem()).equals(nickSender)) {
+                    //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
+                    if (vBoxCollection.containsKey(nickSender)) {
+                        vBoxChat = vBoxCollection.get(nickSender);
+                    } else {
+                        vBoxChat = new VBox();
+                        vBoxCollection.put(nickSender, vBoxChat);
+                    }
+
+                    int messageCounter = messageCounterCollection.get(nickSender);
+
+                    int index = clientsList.getItems().indexOf(getObjectByName(getNickCounter(nickSender,nickSenderCounter,messageCounter)));
+
+                    messageCounter++;
+                    //clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    updateClientsList(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    messageCounterCollection.replace(nickSender,messageCounter);
+                }
+            } else {
+                if (vBoxCollection.containsKey(nickSender)) {
+                    vBoxChat = vBoxCollection.get(nickSender);
+                } else {
+                    vBoxChat = new VBox();
+                    vBoxCollection.put(nickSender, vBoxChat);
+                }
+
+                int messageCounter = messageCounterCollection.get(nickSender);
+                Object listElement = getObjectByName(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                int index = clientsList.getItems().indexOf(listElement);
+                messageCounter++;
+                //clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                updateClientsList(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                messageCounterCollection.replace(nickSender,messageCounter);
+            }
+        }
+    }
+
+    private void updateClientsList(int index, String nick) {
+        System.out.println("updateClientsList");
+        HBox hBox = (HBox) clientsList.getItems().get(index);
+        Label label = (Label) hBox.getChildren().get(0);
+        label.setText(nick);
+        //System.out.println(nick);
+
+        //clientsList.getItems().set(index, nick);
+    }
+
+    private Object getObjectByName(String nick) {
+        Object result = new Object();
+
+        for (Object client:clientsList.getItems()) {
+            if (nick.equals(parseNick(client))){
+                result = client;
+            }
+        }
+        return result;
+    }
+
     private void addText(String msg){
         String[] tokens = msg.split(":",2);
         String nickSender = tokens[0];
         String nickSenderCounter = tokens[0];
-
+        //System.out.println(msg);
+        unreadMessages(nickSender, nickSenderCounter);
         //ошибка при нажатии на список клиентов, если там никого нет
         //счетчик пояаляется даже, если у обоих клиентов активны чаты друг друга
         //выделение сбрасыватеся, когда кликаешь при непринятых сообщениях
-
-//        if (!nickname.equals(nickSender)){
-//            if (!messageCounterCollection.containsKey(nickSender)){
-//                messageCounterCollection.put(nickSender,0);
-//            }
-//
-//            if (clientsList.getSelectionModel().getSelectedItem()!=null) {
-//                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
-//                    //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
-//                    if (vBoxCollection.containsKey(nickSender)) {
-//                        vBoxChat = vBoxCollection.get(nickSender);
-//                    } else {
-//                        vBoxChat = new VBox();
-//                        vBoxCollection.put(nickSender, vBoxChat);
-//                    }
-//
-//                    int messageCounter = messageCounterCollection.get(nickSender);
-//                    int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
-//                    messageCounter++;
-//                    clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
-//                    messageCounterCollection.replace(nickSender,messageCounter);
-//                }
-//            } else {
-//                if (vBoxCollection.containsKey(nickSender)) {
-//                    vBoxChat = vBoxCollection.get(nickSender);
-//                } else {
-//                    vBoxChat = new VBox();
-//                    vBoxCollection.put(nickSender, vBoxChat);
-//                }
-//
-//                int messageCounter = messageCounterCollection.get(nickSender);
-//                int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
-//                messageCounter++;
-//                clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
-//                messageCounterCollection.replace(nickSender,messageCounter);
-//            }
-//        }
 
         VBox vb = new VBox();
         HBox hb = new HBox();
@@ -570,54 +583,39 @@ public class Controller {
     }
 
     public void selectClient(MouseEvent mouseEvent) {
-        HBox hBox = (HBox) clientsList.getSelectionModel().getSelectedItem();
-//        Label label = new Label("ttt");
-//        label.getText();
-        String labelString = hBox.getChildren().get(0).toString();
-        String[] parseLabelString = labelString.split("'",3);
-        String nickReceiver = parseLabelString[1];
-        setVBox(nickReceiver);
-        //где именно поставить? ведь подтягивать историю нужно только 1 раз!! когда вбокс еще не создан!
-        //и что получается? нужно делать следующее: список клиентов должен быть всегда - независимо онлайн они или нет (если онлайн, то нужно просто как-то помечать это!)
-        //и при открытии чата нужно сразу потдягивать историю ВСЕХ чатов, которые уже имел пользователь!
-        //т.е. делать запросы в базу, создавать вбоксы, заносить в них историю в хронологическом порядке и уже иметь аозможность переключаться между ними!
 
-        //значит при нажатии на пользователя уже не будет ситуации, при которой вбокс еще не будет создан. в списке пока будут все клиенты из базы
-        //получается, что можно как в телеге будет отправлять сообщение клиенту офлайн, а ему после открытия чата все придет
-        // вот только как реализовать непринятые сообщения?? ладно, об этом подумаю позже...
+        String nickReceiver = "";
 
-        //за то ситуация с историей (с запросом) несколько облегчается - не нужно теперь разные комбинации ников проверять... за то нужно группировать!
-        //т.е. нужно выбрать все строки из таблицы, в которых фигурирует заданный ник (неважно в каком столбце).
+        if (clientsList.getSelectionModel().getSelectedItem().toString().contains("HBox@")){
+            nickReceiver = parseNick(clientsList.getSelectionModel().getSelectedItem());
+        }else {
+            nickReceiver = clientsList.getSelectionModel().getSelectedItem().toString();
+        }
 
-        //важно еще продумать вот что - как все таки записывать историю переписки двух ников? думаю, что все таки лучше делать так: отправил сообщение - записал в историю
-        //тогда хранение истории в таблице будет выглядеть аналгоично чату - ники будут чередоваться. скорее всего это облегчит их последующий разбор и добавление в вбокс
 
-        //и как будет выглядеть запрос в базу? основой ляжет ник, пользователя, который открывает окно. т.е. нужны все строки из таблицы, где в одной из колонок фигурирует скажем ник1
-
-        //а может поступить след образом? зачем делать именно с начала одну историю, а потом следующую и следующую и.т.д.?
-        //записи выводятся в хронологическом порядке, ник, что справа - отправитель, ник слева - приемник. сразу создать коллекци. пришел ник, отличный от того, чью истории грузим -
-        //проверка - есть в коллекции или нет. нет - создаем, есть подтягиваем из коллекции и заносим сообщение. следующий - так же... пришло из того же чата - значит опять ищем по
-        //нику в коллекции и добавляем, из другого чата - ищем (создаем новый и добавляем) - вроде должно сработать
-
-//        try {
-//            out.writeUTF("/get_history " + nickname + " " + nickReceiver);
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+        //
+        setVBox(nickReceiver, clientsList.getSelectionModel().getSelectedIndex());
     }
 
-    private void setVBox(String nick) {
-        if (nick.endsWith("*")) {
-            int index = clientsList.getItems().indexOf(nick);
-            nick = nick.replace("*", "");
-            clientsList.getItems().set(index, nick);
+    private void setVBox(String nick, int index) {
+//        if (nick.endsWith("*")) {
+//            int index = clientsList.getItems().indexOf(nick);
+//            nick = nick.replace("*", "");
+//            clientsList.getItems().set(index, nick);
+//        }
+
+        if (nick.contains("(")){
+            nick = nick.substring(0,nick.indexOf("("));
+            updateClientsList(index,nick);
         }
 
         if (vBoxCollection.containsKey(nick)) {
             vBoxChat = vBoxCollection.get(nick);
+            //System.out.println("1"+nick);
         }else {
             vBoxChat = new VBox();
             vBoxCollection.put(nick,vBoxChat);
+            //System.out.println("2"+nick);
         }
         splitPane.getItems().clear();
         splitPane.getItems().add(vBoxChat);
