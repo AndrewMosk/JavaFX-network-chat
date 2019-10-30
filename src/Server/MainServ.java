@@ -42,8 +42,8 @@ class MainServ {
         String nickSender = msfTokens[0];
         String nickReceiver = msfTokens[1];
         String message = msfTokens[2];
+        AuthService.saveHistory(nickSender,nickReceiver,message);
 
-        //String[] tokens = msg.split(":");
         //черный список того, кто отправялет
         ArrayList<String> blacklist = AuthService.getBlacklist(nickSender);
         //проверяю есть ли отправитель в чьем-нибудт черном списке
@@ -75,22 +75,30 @@ class MainServ {
 
     void subscribe(ClientHandler client){
         clients.add(client);
-        broadcastClientsList();
+        broadcastClientsStatus(client.getNick(), true);
     }
 
     void unsubscribe(ClientHandler client){
         clients.remove(client);
-        broadcastClientsList();
+        broadcastClientsStatus(client.getNick(), false);
     }
-    void broadcastClientsList() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("/clientslist ");
+    private void broadcastClientsStatus(String nick, boolean online) {
+//        StringBuilder sb = new StringBuilder();
+//        sb.append("/clientslist ");
+//        for (ClientHandler client : clients) {
+//            sb.append(client.getNick() + " ");
+//        }
+//        String out = sb.toString();
+//        for (ClientHandler client : clients) {
+//            client.sendMessage(out);
+//        }
+
+        //рассылает всем только свой статус
+        //но здесь еще вот над чем нужно подумать - как только что подключившийся клиент будет узнавать - кто онлайн, а кто - нет?
         for (ClientHandler client : clients) {
-            sb.append(client.getNick() + " ");
-        }
-        String out = sb.toString();
-        for (ClientHandler client : clients) {
-            client.sendMessage(out);
+            if (!client.getNick().equals(nick)) {
+                client.sendMessage("/clientStatus " + nick + " " + online);
+            }
         }
     }
 
@@ -104,6 +112,32 @@ class MainServ {
 
     boolean addToBlackList(String nick, String nickToBlackList){
         return AuthService.addUserToBlackList(nick,nickToBlackList);
+    }
+
+    void sendHistory(String nickSender) {
+        for (ClientHandler client : clients) {
+            if (client.getNick().equals(nickSender)) {
+                String history = AuthService.getHistory(nickSender);
+                client.sendMessage("/history " + history); //убрал из кавычек getClientList - случайно может добавил?
+                return;
+            }
+        }
+    }
+
+    void sendClientList(String nickSender) {
+        // отсюда я возьму список клиентов онлайн!!
+        ArrayList<String> nicksOnline = new ArrayList<>();
+        for (ClientHandler client : clients) {
+            nicksOnline.add(client.getNick());
+        }
+
+        for (ClientHandler client : clients) {
+            if (client.getNick().equals(nickSender)) {
+                String clientList = AuthService.getClientList(nickSender, nicksOnline);
+                client.sendMessage("/clientList " + clientList);
+                return;
+            }
+        }
     }
 
 }

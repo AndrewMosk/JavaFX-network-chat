@@ -80,7 +80,14 @@ class ClientHandler {
                                         sendMessage("/blacklist " + tokens[1] + " Не найден");
                                     }
                                 }
-                            }else {
+                            }else if (msg.startsWith("/get_history ")) {
+                                String[] tokens = msg.split(" ", 2);
+                                serv.sendHistory(tokens[1]);
+                            }else if (msg.startsWith("/get_clientList ")) {
+                                String[] tokens = msg.split(" ", 2);
+                                serv.sendClientList(tokens[1]);
+                            }
+                            else {
                                 serv.sendMessage(nick + ":" + msg);
                             }
                         }

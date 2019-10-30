@@ -1,6 +1,7 @@
 package Sample;
 
 import javafx.application.Platform;
+import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -120,6 +121,15 @@ public class Controller {
                                 //setAuthorized(true);
                                 Platform.runLater(() -> {
                                     setNewTitle(tokens[1]);
+                                    //fillClientsList();
+                                    try {
+                                        out.writeUTF("/get_clientList " + nickname);
+                                        out.writeUTF("/get_history " + nickname); //нужно отправлять историю только тому, кто только что авторизовался!
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+
+
                                     setAuthorized(true);
                                 });
                                 break;
@@ -148,22 +158,26 @@ public class Controller {
                                     setNewTitle("");
                                     vBoxChat.getChildren().clear();//ПЕРЕДЕЛАТЬ ---> ОТПРАВЛЯТЬ В ПРОЦЕДУРУ ОЧИСТКИ ВБОКСА ВМЕСТЕ С АПДЕЙТОМ КОЛЛЕКЦИИ!
                                 });
-                            }else if (msg.startsWith("/clientslist")){
-                                String[] tokens = msg.split(" ");
+                            }else if (msg.startsWith("/clientList")){
+                                //создание и заполнение списка clientsList
+                                String[] tokens = msg.split(" ",2);
                                 Platform.runLater(() -> {
-                                    clientsList.getItems().clear();
-                                    for (int i = 1; i < tokens.length; i++) {
-                                        if (!tokens[i].equals(nickname)) {
-                                            clientsList.getItems().add(tokens[i]);
-                                        }
-                                    }
+                                    fillClientsList(tokens[1]);
                                 });
                             } else if (msg.equals("Ошибка добавления в черный список")) {
                                 Platform.runLater(() -> showAlertWithHeaderText(msg, "Нельзя добавить в черный список самого себя"));
                             } else if (msg.startsWith("/blacklist")) {
                                 String[] tokens = msg.split(" ", 3);
                                 Platform.runLater(() -> showAlertWithHeaderText(tokens[2], "Пользователь " + tokens[1]));
+                            }else if (msg.startsWith("/history")) {
+                                String[] tokens = msg.split(" ", 2);
+                                fillHistory(tokens[1]);
+                            }else if (msg.startsWith("/clientStatus")) {
+                                String[] tokens = msg.split(" ", 3);
+                                markClient(tokens[1],tokens[2]);
+
                             } else {
+                                //System.out.println(msg);
                                 Platform.runLater(() -> addText(msg));
                             }
                         }
@@ -190,6 +204,88 @@ public class Controller {
         }
     }
 
+    private void markClient(String nick, String status) {
+        ObservableList list = clientsList.getItems();
+        for (Object obj : list) {
+            HBox box = (HBox) obj;
+            String labelString = box.getChildren().get(0).toString();
+            String[] parseLabelString = labelString.split("'", 3);
+            if (parseLabelString[1].equals(nick)) {
+                Button button = (Button) box.getChildren().get(1);
+                if (status.equals("true")){
+                    button.setStyle("-fx-background-radius: 5em; -fx-min-width: 5px; -fx-min-height: 5px; -fx-max-width: 5px; -fx-max-height: 5px; -fx-background-color: green;");
+                }else {
+                    button.setStyle("-fx-background-radius: 5em; -fx-min-width: 5px; -fx-min-height: 5px; -fx-max-width: 5px; -fx-max-height: 5px; -fx-background-color: red;");
+                }
+            }
+        }
+    }
+
+    private void fillClientsList(String message) {
+        String[] tokens = message.split("/");
+        for (String nick_status: tokens) {
+            String[] parse_nick_status = nick_status.split(" ");
+            HBox hbox = new HBox();
+            Label label = new Label(parse_nick_status[0]);
+            Button button = new Button("");
+            button.setDisable(true);
+            hbox.getChildren().addAll(label,button);
+
+            String color;
+            if (parse_nick_status[1].equals("online")) color = "green;";
+            else color = "red;";
+            button.setStyle("-fx-background-radius: 5em; -fx-min-width: 5px; -fx-min-height: 5px; -fx-max-width: 5px; -fx-max-height: 5px; -fx-background-color: " + color);
+            clientsList.getItems().add(hbox);
+        }
+    }
+
+    private void fillHistory(String history) {
+        String[] strings = history.split("/");
+        for (String str:strings) {
+            String nickSender;
+            //String nickReceiver;
+            String collectionOwner;
+            String[] tokens = str.split(" ",3);
+            nickSender = tokens[0];
+
+            if (nickname.equals(tokens[0])) {
+                collectionOwner = tokens[1];
+            }else {
+                collectionOwner = tokens[0];
+            }
+            insertIntoVBox(nickSender, collectionOwner, tokens[2]);
+        }
+    }
+
+    private void insertIntoVBox(String nickSender, String collectionOwner, String msg) {
+        VBox vBoxChat = new VBox();
+
+        if (vBoxCollection.containsKey(collectionOwner)) {
+            vBoxChat = vBoxCollection.get(collectionOwner);
+        }else {
+            vBoxCollection.put(collectionOwner,vBoxChat);
+        }
+
+        VBox vb = new VBox();
+        HBox hb = new HBox();
+        VBox vb1 = new VBox();
+        VBox vb2 = new VBox();
+
+        if (nickSender.equals(nickname)) {
+            vb1.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
+        }else {
+            vb2.getChildren().add(new TextMessage(msg));
+            vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        }
+
+        hb.getChildren().addAll(vb1, vb2);
+        vb.getChildren().add(hb);
+
+        vBoxChat.getChildren().addAll(vb);
+        //listView.scrollTo(listView.getItems().size());
+    }
+
     private String getNickCounter(String nickOriginal, String nickSenderCounter, int counter){
         String result;
         if (counter==0) {
@@ -203,21 +299,15 @@ public class Controller {
         return result;
     }
 
-    private void addText(String msg){
-        String[] tokens = msg.split(":",2);
-        String nickSender = tokens[0];
-        String nickSenderCounter = tokens[0];
-
-        //ошибка при нажатии на список клиентов, если там никого нет
-        //выделение сбрасыватеся, когда кликаешь при непринятых сообщениях
-
+    private void unreadMessages(String nickSender, String nickSenderCounter) {
+        System.out.println("unreadMessages");
         if (!nickname.equals(nickSender)){
             if (!messageCounterCollection.containsKey(nickSender)){
                 messageCounterCollection.put(nickSender,0);
             }
 
             if (clientsList.getSelectionModel().getSelectedItem()!=null) {
-                if (!clientsList.getSelectionModel().getSelectedItem().toString().equals(nickSender)) {
+                if (!parseNick(clientsList.getSelectionModel().getSelectedItem()).equals(nickSender)) {
                     //ищу вбокс в коллекции уже созданных. нашел - беру его, не нашел - создаю новый и пишу в коллекцию
                     if (vBoxCollection.containsKey(nickSender)) {
                         vBoxChat = vBoxCollection.get(nickSender);
@@ -227,9 +317,12 @@ public class Controller {
                     }
 
                     int messageCounter = messageCounterCollection.get(nickSender);
-                    int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+
+                    int index = clientsList.getItems().indexOf(getObjectByName(getNickCounter(nickSender,nickSenderCounter,messageCounter)));
+
                     messageCounter++;
-                    clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    //clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                    updateClientsList(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
                     messageCounterCollection.replace(nickSender,messageCounter);
                 }
             } else {
@@ -241,20 +334,46 @@ public class Controller {
                 }
 
                 int messageCounter = messageCounterCollection.get(nickSender);
-                int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                Object listElement = getObjectByName(getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                int index = clientsList.getItems().indexOf(listElement);
                 messageCounter++;
-                clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                //clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
+                updateClientsList(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
                 messageCounterCollection.replace(nickSender,messageCounter);
             }
-//            if (!messageCounterCollection.containsKey(nickSender)){
-//                messageCounterCollection.put(nickSender,0);
-//            }
-//            int messageCounter = messageCounterCollection.get(nickSender);
-//            int index = clientsList.getItems().indexOf(getNickCounter(nickSender,nickSenderCounter,messageCounter));
-//            messageCounter++;
-//            clientsList.getItems().set(index, getNickCounter(nickSender,nickSenderCounter,messageCounter));
-//            messageCounterCollection.replace(nickSender,messageCounter);
         }
+    }
+
+    private void updateClientsList(int index, String nick) {
+        System.out.println("updateClientsList");
+        HBox hBox = (HBox) clientsList.getItems().get(index);
+        Label label = (Label) hBox.getChildren().get(0);
+        label.setText(nick);
+        //System.out.println(nick);
+
+        //clientsList.getItems().set(index, nick);
+    }
+
+    private Object getObjectByName(String nick) {
+        Object result = new Object();
+
+        for (Object client:clientsList.getItems()) {
+            if (nick.equals(parseNick(client))){
+                result = client;
+            }
+        }
+        return result;
+    }
+
+    private void addText(String msg){
+        String[] tokens = msg.split(":",2);
+        String nickSender = tokens[0];
+        String nickSenderCounter = tokens[0];
+        //System.out.println(msg);
+        unreadMessages(nickSender, nickSenderCounter);
+        //ошибка при нажатии на список клиентов, если там никого нет
+        //счетчик пояаляется даже, если у обоих клиентов активны чаты друг друга
+        //выделение сбрасыватеся, когда кликаешь при непринятых сообщениях
 
         VBox vb = new VBox();
         HBox hb = new HBox();
@@ -291,7 +410,8 @@ public class Controller {
                 try {
                     if (clientsList.getSelectionModel().getSelectedItem() != null) {
                         vBoxChat.setSpacing(10);
-                        out.writeUTF(clientsList.getSelectionModel().getSelectedItem().toString() + ":" + textField.getText());
+                        String nick = parseNick(clientsList.getSelectionModel().getSelectedItem());
+                        out.writeUTF(nick + ":" + textField.getText());
                         textField.clear();
                         textField.requestFocus();
                     }
@@ -300,6 +420,14 @@ public class Controller {
                 }
             }
         }
+    }
+
+    private String parseNick(Object item) {
+        HBox hBox = (HBox) item;
+
+        String labelString = hBox.getChildren().get(0).toString();
+        String[] parseLabelString = labelString.split("'",3);
+        return parseLabelString[1];
     }
 
     public void tryToAuth(ActionEvent actionEvent) {
@@ -455,23 +583,39 @@ public class Controller {
     }
 
     public void selectClient(MouseEvent mouseEvent) {
-        setVBox(clientsList.getSelectionModel().getSelectedItem().toString());
+
+        String nickReceiver = "";
+
+        if (clientsList.getSelectionModel().getSelectedItem().toString().contains("HBox@")){
+            nickReceiver = parseNick(clientsList.getSelectionModel().getSelectedItem());
+        }else {
+            nickReceiver = clientsList.getSelectionModel().getSelectedItem().toString();
+        }
+
+
+        //
+        setVBox(nickReceiver, clientsList.getSelectionModel().getSelectedIndex());
     }
 
-    private void setVBox(String nick) {
-        //запретить при регистрации в нике использовать скобки (...) да и дргуие спец символы : например
+    private void setVBox(String nick, int index) {
+//        if (nick.endsWith("*")) {
+//            int index = clientsList.getItems().indexOf(nick);
+//            nick = nick.replace("*", "");
+//            clientsList.getItems().set(index, nick);
+//        }
+
         if (nick.contains("(")){
-            int index = clientsList.getItems().indexOf(nick);
             nick = nick.substring(0,nick.indexOf("("));
-            clientsList.getItems().set(index, nick);
-            messageCounterCollection.replace(nick,0);
+            updateClientsList(index,nick);
         }
 
         if (vBoxCollection.containsKey(nick)) {
             vBoxChat = vBoxCollection.get(nick);
+            //System.out.println("1"+nick);
         }else {
             vBoxChat = new VBox();
             vBoxCollection.put(nick,vBoxChat);
+            //System.out.println("2"+nick);
         }
         splitPane.getItems().clear();
         splitPane.getItems().add(vBoxChat);

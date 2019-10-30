@@ -6,12 +6,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
 
-public class TextMessage extends TextArea {
+class TextMessage extends TextArea {
     private int maxWidth = 380;
     private int defaultWidth = 40;
     private double fontSize = 18;
 
-    public TextMessage(String text) {
+    TextMessage(String text) {
         setWrapText(true);
         setEditable(false);
         getTextAreaBounds(this, text);
@@ -34,10 +34,6 @@ public class TextMessage extends TextArea {
         int rows = (int) (width / maxWidth * 2);
         int rowLimit = 10;
 
-        if(rows < rowLimit){
-            return rows;
-        } else {
-            return rowLimit;
-        }
+        return Math.min(rows, rowLimit);
     }
 }

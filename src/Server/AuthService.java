@@ -1,9 +1,8 @@
 package Server;
 
-import org.sqlite.SQLiteException;
-
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Date;
 
 class AuthService {
     private static Connection connection;
@@ -114,6 +113,80 @@ class AuthService {
     static void disconnect(){
         try {
             connection.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    static void writeHistory(int id_user1, int id_user2, String message) {
+        try {
+            String sql = String.format("INSERT INTO history (id_user1, id_user2, date, message) VALUES('%s')", id_user1, id_user2, new Date(), message);
+            stmt.execute(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    static String getHistory(String nick) {
+        String result = "";
+        try {
+            String sql = String.format("SELECT senders.nickname AS sender, receivers.nickname AS receiver, history.date, history.message FROM history " +
+                                        "JOIN main AS senders ON senders.id = history.id_user1 " +
+                                        "JOIN main AS receivers ON receivers.id = history.id_user2 WHERE sender = '%s' OR receiver = '%s'",  nick, nick);
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()){
+                result += rs.getString(1) + " " + rs.getString(2) + " " + rs.getString(4) + "/";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        //убираю последний символ
+        if (!result.isEmpty()) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
+    static String getClientList(String nick, ArrayList<String> nicksOnline) {
+        String result = "";
+        try {
+            String sql = String.format("SELECT nickname FROM main WHERE nickname<>'%s'", nick);
+            ResultSet rs = stmt.executeQuery(sql);
+            while (rs.next()){
+                String nickname = rs.getString(1);
+                String status;
+                if (nicksOnline.contains(nickname)){
+                    status = " online";
+                }else {
+                    status = " offline";
+                }
+
+                result += nickname + status + "/";
+                //result += nickname + "/";
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        //убираю последний символ
+        if (!result.isEmpty()) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
+    }
+
+    static void saveHistory(String nickSender, String nickReceiver, String message) {
+        try {
+            String sql = String.format("SELECT id FROM main WHERE nickname = '%s' OR nickname = '%s'", nickSender, nickReceiver);
+            ResultSet rs = stmt.executeQuery(sql);
+            String[] idArray = new String[2];
+            int i = 0;
+            while (rs.next()){
+                idArray[i] = rs.getString("id");
+                i++;
+            }
+
+            String sql1 = String.format("INSERT INTO history (id_user1, id_user2, date, message) VALUES('%s','%s','%s','%s')", idArray[0], idArray[1], new Date(), message);
+            stmt.execute(sql1);
         } catch (SQLException e) {
             e.printStackTrace();
         }
