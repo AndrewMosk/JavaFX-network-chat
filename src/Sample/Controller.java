@@ -79,7 +79,6 @@ public class Controller {
             bottomPanel.setManaged(false);
             clientsList.setVisible(false);
             clientsList.setManaged(false);
-            //а здесь нужна очистка? пожалуй - да
             splitPane.getItems().clear();
         }else {
             VBoxUpperPanel.setVisible(false);
@@ -104,6 +103,38 @@ public class Controller {
         }
     }
 
+    private boolean authorizationAndRegistration(String str) {
+        if (str.startsWith("/authOk")) {
+            String[] tokens = str.split(" ");
+            Platform.runLater(() -> {
+                setNewTitle(tokens[1]);
+                try {
+                    out.writeUTF("/get_clientList " + nickname);
+                    out.writeUTF("/get_history " + nickname); //получаю историю сообщений данного пользователя
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                setAuthorized(true);
+            });
+            return true; //авторизация успешна, цикл прерываю
+        } else if (str.equals("/authentication_error")) {
+            Platform.runLater(() -> showAlertWithHeaderText("Ошибка аутентификаци", "Неверно введена пара логин/пароль"));
+        } else if (str.equals("/reentry")) {
+            Platform.runLater(() -> showAlertWithHeaderText("Попытка повторного входа", "Клиент с такими учетными данными уже воплнил вход"));
+        } else if (str.equals("/successful_registration")) {
+            Platform.runLater(() -> {
+                showAlertWithHeaderText("Регистрация прошла успешно", "Вы можете осуществить вход по только что введенным учетным данным");
+                Stage stage = (Stage) registrationButton.getScene().getWindow();
+                stage.close(); //закрываю окно регистрации
+            });
+        } else if (str.equals("/registration_failed")) {
+            Platform.runLater(() -> showAlertWithHeaderText("Регистрация закончилась неудачей", "Возможно возникла техническая проблема, попробуйте пройти регистрацию еще раз"));
+        } else if (str.equals("/(a&r)registration_denied")) {
+            Platform.runLater(() -> showAlertWithHeaderText("Регистрация отклонена", "Такой логин или ник уже зарегестрированы"));
+        }
+        return false;
+    }
+
     private void connect() {
         try {
             String[] configData = getConfigData();
@@ -115,49 +146,22 @@ public class Controller {
                 @Override protected Void call() {
                     try {
                         while (true) {
-                            String str = in.readUTF();
-                            if (str.startsWith("/authOk")) {
-                                String[] tokens = str.split(" ");
-                                //setAuthorized(true);
-                                Platform.runLater(() -> {
-                                    setNewTitle(tokens[1]);
-                                    //fillClientsList();
-                                    try {
-                                        out.writeUTF("/get_clientList " + nickname);
-                                        out.writeUTF("/get_history " + nickname); //нужно отправлять историю только тому, кто только что авторизовался!
-                                    } catch (IOException e) {
-                                        e.printStackTrace();
-                                    }
-
-
-                                    setAuthorized(true);
-                                });
-                                break;
-                            } else if (str.equals("Ошибка аутентификаци")) {
-                                Platform.runLater(() -> showAlertWithHeaderText(str, "Неверно введена пара логин/пароль"));
-                            } else if (str.equals("Попытка повторного входа")) {
-                                Platform.runLater(() -> showAlertWithHeaderText(str, "Клиент с такими учетными данными уже воплнил вход"));
-                            } else if (str.equals("Регистрация прошла успешно")) {
-                                Platform.runLater(() -> {
-                                    showAlertWithHeaderText(str, "Вы можете осуществить вход по только что введенным учетным данным");
-                                    //закрываю окно регистрации
-                                    Stage stage = (Stage) registrationButton.getScene().getWindow();
-                                    stage.close();
-                                });
-                            } else if (str.equals("Регистрация закончилась неудачей")) {
-                                Platform.runLater(() -> showAlertWithHeaderText(str, "Возможно возникла техническая проблема, попробуйте пройти регистрацию еще раз"));
-                            } else if (str.equals("Регистрация отклонена")) {
-                                Platform.runLater(() -> showAlertWithHeaderText(str, "Такой логин или ник уже зарегестрированы"));
-                            }
+                            boolean authenticationSuccessful = authorizationAndRegistration(in.readUTF()); // ввожу локальную переменную для наглядности логики
+                            if (authenticationSuccessful) break;
                         }
                         while (true) {
                             String msg = in.readUTF();
-                            if (msg.equalsIgnoreCase("/clientClose")) {
+                            if (msg.equalsIgnoreCase("/end")) {
                                 setAuthorized(false);
                                 Platform.runLater(() -> {
                                     setNewTitle("");
-                                    vBoxChat.getChildren().clear();//ПЕРЕДЕЛАТЬ ---> ОТПРАВЛЯТЬ В ПРОЦЕДУРУ ОЧИСТКИ ВБОКСА ВМЕСТЕ С АПДЕЙТОМ КОЛЛЕКЦИИ!
+                                    //vBoxChat.getChildren().clear();//ПЕРЕДЕЛАТЬ --->
+                                    vBoxCollection.clear();
+                                    //!!! и так...коллекцию вбоксов здесь очищаю, т.е. истории, которые подгружал, соответственно тоже очищаются
+                                    //проверить еще раз всю цепочку при перелогине... начиная с клиент лист, кончая историей
+                                    // ОТПРАВЛЯТЬ В ПРОЦЕДУРУ ОЧИСТКИ ВБОКСА ВМЕСТЕ С АПДЕЙТОМ КОЛЛЕКЦИИ!
                                 });
+                                break;
                             }else if (msg.startsWith("/clientList")){
                                 //создание и заполнение списка clientsList
                                 String[] tokens = msg.split(" ",2);
@@ -177,7 +181,6 @@ public class Controller {
                                 markClient(tokens[1],tokens[2]);
 
                             } else {
-                                //System.out.println(msg);
                                 Platform.runLater(() -> addText(msg));
                             }
                         }
@@ -222,6 +225,7 @@ public class Controller {
     }
 
     private void fillClientsList(String message) {
+        clientsList.getItems().clear();
         String[] tokens = message.split("/");
         for (String nick_status: tokens) {
             String[] parse_nick_status = nick_status.split(" ");
@@ -619,5 +623,13 @@ public class Controller {
         }
         splitPane.getItems().clear();
         splitPane.getItems().add(vBoxChat);
+    }
+
+    public void logOut(ActionEvent actionEvent) {
+        try {
+            out.writeUTF("/end"); //терминирующая команда
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
