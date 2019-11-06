@@ -9,17 +9,18 @@
     <stylesheets><URL value="@/CSS/Style.css"/></stylesheets>
     <VBox AnchorPane.topAnchor="0.0">
         <MenuBar>
-            <Menu mnemonicParsing="false" text="File">
-                <MenuItem fx:id="close" mnemonicParsing="false" onAction="#closeWindow" text="Close"/>
+            <Menu mnemonicParsing="false" text="Файл">
+                <MenuItem mnemonicParsing="false" onAction="#logOut" text="Выполнить выход"/>
+                <MenuItem fx:id="close" mnemonicParsing="false" onAction="#closeWindow" text="Закрыть программу"/>
             </Menu>
-            <Menu mnemonicParsing="false" text="Edit">
-                <MenuItem fx:id="clear" mnemonicParsing="false" onAction="#clearWindow" text="Clear window"/>
+<!--            <Menu mnemonicParsing="false" text="Edit">-->
+<!--                <MenuItem fx:id="clear" mnemonicParsing="false" onAction="#clearWindow" text="Clear window"/>-->
+<!--            </Menu>-->
+            <Menu mnemonicParsing="false" text="Свойства">
+                <MenuItem fx:id="netConfig" mnemonicParsing="false" onAction="#openConfigWindow" text="Настройки соединения"/>
             </Menu>
-            <Menu mnemonicParsing="false" text="Settings">
-                <MenuItem fx:id="netConfig" mnemonicParsing="false" onAction="#openConfigWindow" text="Network configuration"/>
-            </Menu>
-            <Menu mnemonicParsing="false" text="Help">
-                <MenuItem fx:id="about" mnemonicParsing="false" onAction="#openInfoWindow" text="About"/>
+            <Menu mnemonicParsing="false" text="Помощь">
+                <MenuItem fx:id="about" mnemonicParsing="false" onAction="#openInfoWindow" text="О программе"/>
             </Menu>
         </MenuBar>
 

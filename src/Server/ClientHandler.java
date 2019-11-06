@@ -40,22 +40,23 @@ class ClientHandler {
                                         serv.subscribe(ClientHandler.this);
                                         break;
                                     }else {
-                                        sendMessage("Попытка повторного входа");
+                                        //sendMessage("Попытка повторного входа");
+                                        sendMessage("/reentry");
                                     }
                                 }else {
-                                    sendMessage("Ошибка аутентификаци");
+                                    sendMessage("/authentication_error");
                                 }
                             }else if (str.startsWith("/reg")){
                                 String[] tokens = str.split(" ");
                                 boolean validRegData = AuthService.checkLoginAndNick(tokens[1], tokens[2]);
                                 if (validRegData){
                                     if (AuthService.regNewUser(tokens[1], tokens[2], tokens[3])){
-                                        sendMessage("Регистрация прошла успешно");
+                                        sendMessage("/successful_registration");
                                     }else {
-                                        sendMessage("Регистрация закончилась неудачей");
+                                        sendMessage("/registration_failed");
                                     }
                                 }else {
-                                    sendMessage("Регистрация отклонена");
+                                    sendMessage("/registration_denied");
                                 }
                             }
                         }
@@ -63,7 +64,7 @@ class ClientHandler {
                         while (true){
                             String msg = in.readUTF();
                             if (msg.equalsIgnoreCase("/end")) {
-                                sendMessage("/clientClose");
+                                sendMessage("/end");
                                 break;
                             }else if (msg.startsWith("/w")) {
                                 //сообщение конкретному клиенту
