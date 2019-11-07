@@ -129,7 +129,7 @@ public class Controller {
             });
         } else if (str.equals("/registration_failed")) {
             Platform.runLater(() -> showAlertWithHeaderText("Регистрация закончилась неудачей", "Возможно возникла техническая проблема, попробуйте пройти регистрацию еще раз"));
-        } else if (str.equals("/(a&r)registration_denied")) {
+        } else if (str.equals("/registration_denied")) {
             Platform.runLater(() -> showAlertWithHeaderText("Регистрация отклонена", "Такой логин или ник уже зарегестрированы"));
         }
         return false;
