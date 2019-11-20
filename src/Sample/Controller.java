@@ -276,11 +276,12 @@ public class Controller {
         VBox vb2 = new VBox();
 
         if (nickSender.equals(nickname)) {
-            vb1.getChildren().add(new TextMessage(msg));
-            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
-        }else {
-            vb2.getChildren().add(new TextMessage(msg));
+            vb1.getChildren().add(new TextMessage(msg, false));
             vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        }else {
+            TextMessage textMessage = new TextMessage(msg, true);
+            vb2.getChildren().add(textMessage);
+            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         }
 
         hb.getChildren().addAll(vb1, vb2);
@@ -349,7 +350,7 @@ public class Controller {
     }
 
     private void updateClientsList(int index, String nick) {
-        System.out.println("updateClientsList");
+        //System.out.println("updateClientsList");
         HBox hBox = (HBox) clientsList.getItems().get(index);
         Label label = (Label) hBox.getChildren().get(0);
         label.setText(nick);
@@ -385,11 +386,11 @@ public class Controller {
         VBox vb2 = new VBox();
 
         if (nickSender.equals(nickname)) {
-            vb1.getChildren().add(new TextMessage(msg));
-            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
-        }else {
-            vb2.getChildren().add(new TextMessage(msg));
+            vb1.getChildren().add(new TextMessage(msg, false));
             vb.setNodeOrientation(NodeOrientation.RIGHT_TO_LEFT);
+        }else {
+            vb2.getChildren().add(new TextMessage(msg, true));
+            vb.setNodeOrientation(NodeOrientation.LEFT_TO_RIGHT);
         }
 
         hb.getChildren().addAll(vb1, vb2);

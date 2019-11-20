@@ -5,13 +5,14 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-
 class TextMessage extends TextArea {
     private int maxWidth = 380;
     private int defaultWidth = 40;
     private double fontSize = 18;
+    private boolean changeBackground;
 
-    TextMessage(String text) {
+    TextMessage(String text, boolean changeBackground) {
+        this.changeBackground = changeBackground;
         setWrapText(true);
         setEditable(false);
         getTextAreaBounds(this, text);
@@ -28,6 +29,9 @@ class TextMessage extends TextArea {
         textArea.setMaxWidth(maxWidth);
         textArea.setPrefRowCount(getTextAreaHeight(width));
         textArea.setText(message);
+        if (changeBackground) {
+            textArea.setStyle("-fx-background-color: white;");
+        }
     }
 
     private int getTextAreaHeight(double width){

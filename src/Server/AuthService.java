@@ -176,16 +176,15 @@ class AuthService {
 
     static void saveHistory(String nickSender, String nickReceiver, String message) {
         try {
-            String sql = String.format("SELECT id FROM main WHERE nickname = '%s' OR nickname = '%s'", nickSender, nickReceiver);
-            ResultSet rs = stmt.executeQuery(sql);
-            String[] idArray = new String[2];
-            int i = 0;
-            while (rs.next()){
-                idArray[i] = rs.getString("id");
-                i++;
-            }
+            ResultSet rsSender = stmt.executeQuery(String.format("SELECT id FROM main WHERE nickname = '%s'", nickSender));
+            rsSender.next();
+            String idSender = rsSender.getString("id");
 
-            String sql1 = String.format("INSERT INTO history (id_user1, id_user2, date, message) VALUES('%s','%s','%s','%s')", idArray[0], idArray[1], new Date(), message);
+            ResultSet rsReceiver = stmt.executeQuery(String.format("SELECT id FROM main WHERE nickname = '%s'", nickReceiver));
+            rsReceiver.next();
+            String idReceiver = rsSender.getString("id");
+
+            String sql1 = String.format("INSERT INTO history (id_user1, id_user2, date, message) VALUES('%s','%s','%s','%s')", idSender, idReceiver, new Date(), message);
             stmt.execute(sql1);
         } catch (SQLException e) {
             e.printStackTrace();
